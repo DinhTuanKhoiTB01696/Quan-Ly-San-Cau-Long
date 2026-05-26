@@ -44,12 +44,12 @@
       </div>
       <div class="actions">
         <!-- Host Logic -->
-        <template v-if="isHost && match.status === 0">
+        <template v-if="isHost && match.status === 1">
           <button @click="$emit('mark-full', match.id)" class="btn btn-outline btn-sm">Đã đủ kèo</button>
         </template>
         
         <!-- Participant Logic -->
-        <template v-if="!isHost && auth.isAuthenticated && match.status === 0">
+        <template v-if="!isHost && auth.isAuthenticated && match.status === 1">
           <button v-if="!hasJoined" @click="$emit('join', match.id)" class="btn btn-primary btn-sm">Tham Gia</button>
           <template v-else>
             <button @click="$emit('leave', match.id)" class="btn btn-outline btn-sm" style="color: var(--danger-color); border-color: var(--danger-color);">Hủy</button>
@@ -60,7 +60,7 @@
         </template>
         
         <!-- Unauthenticated Logic -->
-        <template v-if="!isHost && !auth.isAuthenticated && match.status === 0">
+        <template v-if="!isHost && !auth.isAuthenticated && match.status === 1">
           <router-link to="/login" class="btn btn-primary btn-sm">Đăng nhập để tham gia</router-link>
         </template>
       </div>
@@ -92,23 +92,28 @@ const hasJoined = computed(() => {
   return props.match.participantIds?.includes(auth.user.id);
 })
 
-// Status: 0=Open, 1=Full, 2=Expired
+// Status: 1=Open, 2=Full, 3=Expired
 const statusClass = computed(() => {
-  if (props.match.status === 1) return 'bg-gray'
-  if (props.match.status === 2) return 'bg-red'
+  if (props.match.status === 2) return 'bg-gray'
+  if (props.match.status === 3) return 'bg-red'
   return 'bg-green'
 })
 
 const statusText = computed(() => {
-  if (props.match.status === 1) return 'Đã đủ người'
-  if (props.match.status === 2) return 'Đã kết thúc'
+  if (props.match.status === 2) return 'Đã đủ người'
+  if (props.match.status === 3) return 'Đã kết thúc'
   return 'Đang tuyển'
 })
 
-// Level: 0=All, 1=Beginner, 2=Intermediate, 3=Advanced
+// Level: 1=Yeu, 2=Trung, 3=Kha, 4=Gioi
 const levelText = computed(() => {
-  const levels = ['Giao lưu tự do', 'Yếu (Mới chơi)', 'Trung bình (Đánh rally 10+)', 'Khá (Biết smash)']
-  return levels[props.match.level] || 'Không xác định'
+  const levels = {
+    1: 'Yếu (Mới chơi)',
+    2: 'Trung bình (Đánh rally 10+)',
+    3: 'Khá (Biết smash)',
+    4: 'Giỏi (Thi đấu phong trào)'
+  }
+  return levels[props.match.level] || 'Tất cả'
 })
 
 const formatDate = (dateStr) => {

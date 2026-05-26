@@ -46,10 +46,10 @@
         <div class="form-group">
           <label>Trình độ yêu cầu</label>
           <select v-model.number="form.level" required>
-            <option value="0">Giao lưu tự do (mọi trình độ)</option>
             <option value="1">Yếu (Mới chơi)</option>
             <option value="2">Trung bình (Đánh rally 10+)</option>
             <option value="3">Khá (Biết smash)</option>
+            <option value="4">Giỏi (Thi đấu phong trào)</option>
           </select>
         </div>
 
@@ -97,9 +97,9 @@ const form = reactive({
   date: today.value,
   timeStart: '18:00',
   timeEnd: '20:00',
-  slotsTotal: 2,
-  cost: 50000,
-  level: 0,
+  slotsTotal: 4,
+  level: 2,
+  cost: 0,
   zalo: '',
   note: ''
 })

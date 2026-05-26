@@ -15,6 +15,11 @@
         </div>
         
         <div class="form-group">
+          <label>Xác nhận mật khẩu</label>
+          <input type="password" v-model="form.confirmPassword" required placeholder="Nhập lại mật khẩu" />
+        </div>
+        
+        <div class="form-group">
           <label>Họ và tên</label>
           <input type="text" v-model="form.fullName" required placeholder="Ví dụ: Nguyễn Văn A" />
         </div>

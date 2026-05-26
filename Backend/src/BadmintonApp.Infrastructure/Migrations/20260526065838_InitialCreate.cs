@@ -108,6 +108,31 @@ namespace BadmintonApp.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "MatchParticipants",
+                columns: table => new
+                {
+                    MatchId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    JoinedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MatchParticipants", x => new { x.MatchId, x.UserId });
+                    table.ForeignKey(
+                        name: "FK_MatchParticipants_Matches_MatchId",
+                        column: x => x.MatchId,
+                        principalTable: "Matches",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MatchParticipants_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Reports",
                 columns: table => new
                 {
@@ -147,6 +172,11 @@ namespace BadmintonApp.Infrastructure.Migrations
                 column: "HostUserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_MatchParticipants_UserId",
+                table: "MatchParticipants",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Reports_MatchId",
                 table: "Reports",
                 column: "MatchId");
@@ -162,6 +192,9 @@ namespace BadmintonApp.Infrastructure.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Feedbacks");
+
+            migrationBuilder.DropTable(
+                name: "MatchParticipants");
 
             migrationBuilder.DropTable(
                 name: "Reports");

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BadmintonApp.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260526063712_InitialCreate")]
+    [Migration("20260526065838_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -171,6 +171,24 @@ namespace BadmintonApp.Infrastructure.Migrations
                     b.ToTable("Matches");
                 });
 
+            modelBuilder.Entity("BadmintonApp.Domain.Entities.MatchParticipant", b =>
+                {
+                    b.Property<int>("MatchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("MatchId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("MatchParticipants");
+                });
+
             modelBuilder.Entity("BadmintonApp.Domain.Entities.Report", b =>
                 {
                     b.Property<int>("Id")
@@ -258,6 +276,25 @@ namespace BadmintonApp.Infrastructure.Migrations
                     b.Navigation("HostUser");
                 });
 
+            modelBuilder.Entity("BadmintonApp.Domain.Entities.MatchParticipant", b =>
+                {
+                    b.HasOne("BadmintonApp.Domain.Entities.Match", "Match")
+                        .WithMany("Participants")
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BadmintonApp.Domain.Entities.User", "User")
+                        .WithMany("JoinedMatches")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Match");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BadmintonApp.Domain.Entities.Report", b =>
                 {
                     b.HasOne("BadmintonApp.Domain.Entities.Match", "Match")
@@ -283,7 +320,14 @@ namespace BadmintonApp.Infrastructure.Migrations
 
             modelBuilder.Entity("BadmintonApp.Domain.Entities.Match", b =>
                 {
+                    b.Navigation("Participants");
+
                     b.Navigation("Reports");
+                });
+
+            modelBuilder.Entity("BadmintonApp.Domain.Entities.User", b =>
+                {
+                    b.Navigation("JoinedMatches");
                 });
 #pragma warning restore 612, 618
         }

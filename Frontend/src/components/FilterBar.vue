@@ -16,10 +16,10 @@
       <label>Trình độ</label>
       <select v-model="filters.level" @change="emitFilter">
         <option :value="null">Tất cả trình độ</option>
-        <option value="0">Giao lưu tự do</option>
         <option value="1">Yếu (Mới chơi)</option>
         <option value="2">Trung bình (Đánh rally 10+)</option>
         <option value="3">Khá (Biết smash)</option>
+        <option value="4">Giỏi (Thi đấu phong trào)</option>
       </select>
     </div>
 
@@ -27,8 +27,8 @@
       <label>Trạng thái</label>
       <select v-model="filters.status" @change="emitFilter">
         <option :value="null">Tất cả</option>
-        <option value="0">Đang tuyển</option>
-        <option value="1">Đã đủ người</option>
+        <option value="1">Đang tuyển</option>
+        <option value="2">Đã đủ người</option>
       </select>
     </div>
   </div>
@@ -42,7 +42,7 @@ const emit = defineEmits(['filter-changed'])
 const filters = reactive({
   area: null,
   level: null,
-  status: 0 // Mặc định hiển thị đang tuyển
+  status: 1 // Mặc định hiển thị đang tuyển (Open = 1)
 })
 
 const emitFilter = () => {

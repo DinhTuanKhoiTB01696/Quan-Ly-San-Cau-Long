@@ -53,7 +53,7 @@ const authStore = useAuthStore()
 const toast = useToast()
 
 onMounted(() => {
-  matchStore.fetchMatches({ status: 0 }) // Mặc định lấy kèo đang mở
+  matchStore.fetchMatches({ status: 1 }) // Mặc định lấy kèo đang mở
 })
 
 const onFilterChange = (filters) => {
@@ -62,7 +62,7 @@ const onFilterChange = (filters) => {
 
 const handleMarkFull = async (matchId) => {
   if(confirm('Bạn xác nhận kèo này đã đủ người?')) {
-    await matchStore.updateStatus(matchId, 1) // 1 = Full
+    await matchStore.updateStatus(matchId, 2) // 2 = Full
     toast.success('Đã cập nhật trạng thái!')
   }
 }
@@ -73,7 +73,7 @@ const handleJoin = async (matchId) => {
     if (success) {
       toast.success('Tham gia thành công! Bạn có thể xem link Zalo của Host.')
       // Refetch to update participantIds and slots
-      matchStore.fetchMatches({ status: 0 }) 
+      matchStore.fetchMatches({ status: 1 }) 
     } else {
       toast.error(matchStore.error || 'Tham gia thất bại')
     }
@@ -85,7 +85,7 @@ const handleLeave = async (matchId) => {
     const success = await matchStore.leaveMatch(matchId)
     if (success) {
       toast.success('Đã hủy tham gia.')
-      matchStore.fetchMatches({ status: 0 }) 
+      matchStore.fetchMatches({ status: 1 }) 
     } else {
       toast.error(matchStore.error || 'Hủy tham gia thất bại')
     }

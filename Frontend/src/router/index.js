@@ -50,18 +50,16 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
   const authStore = useAuthStore()
   const isAuthenticated = authStore.isAuthenticated
 
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next({ name: 'login', query: { redirect: to.fullPath } })
+    return { name: 'login', query: { redirect: to.fullPath } }
   } else if (to.meta.requiresGuest && isAuthenticated) {
-    next({ name: 'home' })
+    return { name: 'home' }
   } else if (to.meta.requiresAdmin && authStore.user?.role !== 'Admin') {
-    next({ name: 'home' })
-  } else {
-    next()
+    return { name: 'home' }
   }
 })
 
