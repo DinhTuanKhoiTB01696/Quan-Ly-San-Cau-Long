@@ -76,6 +76,26 @@ export const useMatchStore = defineStore('matches', {
         this.error = err.response?.data?.message || 'Cập nhật trạng thái thất bại'
         return false
       }
+    },
+
+    async joinMatch(id) {
+      try {
+        await api.post(`/matches/${id}/join`)
+        return true
+      } catch (err) {
+        this.error = err.response?.data?.message || 'Tham gia thất bại'
+        return false
+      }
+    },
+
+    async leaveMatch(id) {
+      try {
+        await api.post(`/matches/${id}/leave`)
+        return true
+      } catch (err) {
+        this.error = err.response?.data?.message || 'Hủy tham gia thất bại'
+        return false
+      }
     }
   }
 })

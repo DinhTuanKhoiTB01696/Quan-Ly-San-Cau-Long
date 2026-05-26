@@ -43,12 +43,26 @@
         <span>{{ match.hostName }}</span>
       </div>
       <div class="actions">
+        <!-- Host Logic -->
         <template v-if="isHost && match.status === 0">
           <button @click="$emit('mark-full', match.id)" class="btn btn-outline btn-sm">Đã đủ kèo</button>
         </template>
-        <a v-if="match.status === 0" :href="'https://zalo.me/' + match.zalo" target="_blank" class="btn btn-primary btn-sm zalo-btn">
-          💬 Xin Slot (Zalo)
-        </a>
+        
+        <!-- Participant Logic -->
+        <template v-if="!isHost && auth.isAuthenticated && match.status === 0">
+          <button v-if="!hasJoined" @click="$emit('join', match.id)" class="btn btn-primary btn-sm">Tham Gia</button>
+          <template v-else>
+            <button @click="$emit('leave', match.id)" class="btn btn-outline btn-sm" style="color: var(--danger-color); border-color: var(--danger-color);">Hủy</button>
+            <a :href="'https://zalo.me/' + match.zalo" target="_blank" class="btn btn-primary btn-sm zalo-btn">
+              💬 Liên hệ Host (Zalo)
+            </a>
+          </template>
+        </template>
+        
+        <!-- Unauthenticated Logic -->
+        <template v-if="!isHost && !auth.isAuthenticated && match.status === 0">
+          <router-link to="/login" class="btn btn-primary btn-sm">Đăng nhập để tham gia</router-link>
+        </template>
       </div>
     </div>
   </div>
@@ -56,6 +70,9 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
 
 const props = defineProps({
   match: {
@@ -68,7 +85,12 @@ const props = defineProps({
   }
 })
 
-defineEmits(['mark-full'])
+defineEmits(['mark-full', 'join', 'leave'])
+
+const hasJoined = computed(() => {
+  if (!auth.isAuthenticated || !auth.user) return false;
+  return props.match.participantIds?.includes(auth.user.id);
+})
 
 // Status: 0=Open, 1=Full, 2=Expired
 const statusClass = computed(() => {

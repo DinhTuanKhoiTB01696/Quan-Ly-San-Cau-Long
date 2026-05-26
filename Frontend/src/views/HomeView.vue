@@ -28,6 +28,8 @@
         :match="match" 
         :isHost="authStore.user?.id === match.hostUserId"
         @mark-full="handleMarkFull"
+        @join="handleJoin"
+        @leave="handleLeave"
       />
     </div>
 
@@ -58,6 +60,31 @@ const onFilterChange = (filters) => {
 const handleMarkFull = async (matchId) => {
   if(confirm('Bạn xác nhận kèo này đã đủ người?')) {
     await matchStore.updateStatus(matchId, 1) // 1 = Full
+  }
+}
+
+const handleJoin = async (matchId) => {
+  if(confirm('Bạn xác nhận muốn tham gia kèo này?')) {
+    const success = await matchStore.joinMatch(matchId)
+    if (success) {
+      alert('Tham gia thành công! Bạn có thể xem link Zalo của Host.')
+      // Refetch to update participantIds and slots
+      matchStore.fetchMatches({ status: 0 }) 
+    } else {
+      alert(matchStore.error || 'Tham gia thất bại')
+    }
+  }
+}
+
+const handleLeave = async (matchId) => {
+  if(confirm('Bạn chắc chắn muốn hủy tham gia kèo này?')) {
+    const success = await matchStore.leaveMatch(matchId)
+    if (success) {
+      alert('Đã hủy tham gia.')
+      matchStore.fetchMatches({ status: 0 }) 
+    } else {
+      alert(matchStore.error || 'Hủy tham bại')
+    }
   }
 }
 </script>

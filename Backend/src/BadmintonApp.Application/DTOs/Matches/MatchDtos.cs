@@ -26,6 +26,7 @@ public class MatchDto
     public string Note { get; set; } = string.Empty;
     
     public MatchStatus Status { get; set; }
+    public IEnumerable<int> ParticipantIds { get; set; } = new List<int>();
     public int ReportCount { get; set; }
 }
 

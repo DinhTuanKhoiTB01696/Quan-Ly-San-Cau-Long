@@ -19,7 +19,7 @@ public class MatchService : IMatchService
 
     public async Task<IEnumerable<MatchDto>> GetAllAsync(Area? area, Level? level, MatchStatus? status)
     {
-        var query = _context.Matches.Include(m => m.Court).AsQueryable();
+        var query = _context.Matches.Include(m => m.Court).Include(m => m.Participants).AsQueryable();
 
         if (area.HasValue)
             query = query.Where(m => m.Court.Area == area.Value);
@@ -42,6 +42,7 @@ public class MatchService : IMatchService
     {
         var matches = await _context.Matches
             .Include(m => m.Court)
+            .Include(m => m.Participants)
             .Where(m => m.HostUserId == hostUserId)
             .OrderByDescending(m => m.Date)
             .ToListAsync();
@@ -51,7 +52,7 @@ public class MatchService : IMatchService
 
     public async Task<MatchDto?> GetByIdAsync(int id)
     {
-        var m = await _context.Matches.Include(x => x.Court).FirstOrDefaultAsync(x => x.Id == id);
+        var m = await _context.Matches.Include(x => x.Court).Include(x => x.Participants).FirstOrDefaultAsync(x => x.Id == id);
         return m == null ? null : MapToDto(m);
     }
 
@@ -231,7 +232,8 @@ public class MatchService : IMatchService
             Level = m.Level,
             Cost = m.Cost,
             Note = m.Note,
-            Status = m.Status
+            Status = m.Status,
+            ParticipantIds = m.Participants?.Select(p => p.UserId).ToList() ?? new List<int>()
         };
     }
 }
