@@ -1,6 +1,9 @@
 @echo off
 chcp 65001 >nul
-title 🏸 Ghép Kèo Cầu Lông Biên Hòa
+title Ghep Keo Cau Long Bien Hoa
+
+:: Luu duong dan root cua project
+set "ROOT=%~dp0"
 
 echo.
 echo =====================================================
@@ -8,87 +11,84 @@ echo    GHEP KEO CAU LONG BIEN HOA - HE THONG KHOI DONG
 echo =====================================================
 echo.
 
-:: ---- Hỏi reset DB ----
+:: ---- Hoi reset DB ----
 set /p resetDB="Ban co muon reset Database va seed data khong? (Y/N): "
-if /I "%resetDB%"=="Y" (
-    echo.
-    echo [1/5] Drop Database cu...
-    cd Backend\src\BadmintonApp.API
-    dotnet ef database drop -f --project ../BadmintonApp.Infrastructure --startup-project .
-    if errorlevel 1 (
-        echo [SKIP] Khong co Database cu de xoa, tiep tuc...
-    )
+if /I NOT "%resetDB%"=="Y" goto SKIP_DB
 
-    echo.
-    echo [2/5] Xoa cac migration cu...
-    if exist "..\BadmintonApp.Infrastructure\Migrations" (
-        rd /s /q "..\BadmintonApp.Infrastructure\Migrations"
-        echo        Da xoa folder Migrations.
-    ) else (
-        echo        Khong co migration cu.
-    )
+echo.
+echo [1/5] Drop Database cu...
+dotnet ef database drop -f --project "%ROOT%Backend\src\BadmintonApp.Infrastructure" --startup-project "%ROOT%Backend\src\BadmintonApp.API"
+echo.
 
-    echo.
-    echo [3/5] Tao migration moi 'InitialCreate'...
-    dotnet ef migrations add InitialCreate --project ../BadmintonApp.Infrastructure --startup-project .
-    if errorlevel 1 (
-        echo [LOI] Tao migration that bai! Kiem tra lai code.
-        pause
-        exit /b 1
-    )
+echo [2/5] Xoa cac migration cu...
+if exist "%ROOT%Backend\src\BadmintonApp.Infrastructure\Migrations" (
+    rd /s /q "%ROOT%Backend\src\BadmintonApp.Infrastructure\Migrations"
+    echo        Da xoa folder Migrations.
+) else (
+    echo        Khong co migration cu.
+)
+echo.
 
-    echo.
-    echo [4/5] Cap nhat Database...
-    dotnet ef database update --project ../BadmintonApp.Infrastructure --startup-project .
-    if errorlevel 1 (
-        echo [LOI] Cap nhat database that bai!
-        pause
-        exit /b 1
-    )
+echo [3/5] Tao migration moi 'InitialCreate'...
+dotnet ef migrations add InitialCreate --project "%ROOT%Backend\src\BadmintonApp.Infrastructure" --startup-project "%ROOT%Backend\src\BadmintonApp.API"
+if errorlevel 1 (
+    echo [LOI] Tao migration that bai!
+    pause
+    exit /b 1
+)
+echo.
 
-    echo.
-    echo [5/5] Seed Data - 20 san cau long + tai khoan admin...
-    sqlcmd -S KHOI\SQLEXPRESS -d BadmintonDB -E -i "..\..\..\seed_data.sql"
-    if errorlevel 1 (
-        echo [CANH BAO] Seed data that bai. Ban co the chay thu cong: sqlcmd -S KHOI\SQLEXPRESS -d BadmintonDB -E -i seed_data.sql
-    ) else (
-        echo        Seed data thanh cong!
-    )
+echo [4/5] Cap nhat Database...
+dotnet ef database update --project "%ROOT%Backend\src\BadmintonApp.Infrastructure" --startup-project "%ROOT%Backend\src\BadmintonApp.API"
+if errorlevel 1 (
+    echo [LOI] Cap nhat database that bai!
+    pause
+    exit /b 1
+)
+echo.
 
-    cd ..\..\..
-    echo.
-    echo =====================================================
-    echo    RESET DATABASE HOAN TAT
-    echo =====================================================
+echo [5/5] Seed Data - 20 san cau long + tai khoan admin...
+sqlcmd -S KHOI\SQLEXPRESS -d BadmintonDB -E -i "%ROOT%seed_data.sql"
+if errorlevel 1 (
+    echo [CANH BAO] Seed data co the that bai. Kiem tra SQL Server.
+) else (
+    echo        Seed data thanh cong!
 )
 
-:: ---- Kiểm tra và cài dependencies Frontend ----
+echo.
+echo =====================================================
+echo    RESET DATABASE HOAN TAT
+echo =====================================================
+
+:SKIP_DB
+
+:: ---- Kiem tra Frontend dependencies ----
 echo.
 echo --- KIEM TRA FRONTEND DEPENDENCIES ---
-if not exist "Frontend\node_modules" (
+if not exist "%ROOT%Frontend\node_modules" (
     echo    Chua co node_modules, dang cai dat...
-    cd Frontend
+    pushd "%ROOT%Frontend"
     call npm install
-    cd ..
+    popd
     echo    Cai dat xong!
 ) else (
     echo    node_modules da ton tai, bo qua.
 )
 
-:: ---- Khởi động Backend ----
+:: ---- Khoi dong Backend ----
 echo.
 echo --- KHOI DONG BACKEND ---
 echo    URL: http://localhost:5219
 echo    Swagger: http://localhost:5219/swagger
-start "Backend API - Cau Long" cmd /k "cd Backend\src\BadmintonApp.API && dotnet watch run"
+start "Backend API" cmd /k "cd /d "%ROOT%Backend\src\BadmintonApp.API" && dotnet watch run"
 
-:: ---- Khởi động Frontend ----
+:: ---- Khoi dong Frontend ----
 echo.
 echo --- KHOI DONG FRONTEND ---
 echo    URL: http://localhost:5173
-start "Frontend Vue - Cau Long" cmd /k "cd Frontend && npm run dev"
+start "Frontend Vue" cmd /k "cd /d "%ROOT%Frontend" && npm run dev"
 
-:: ---- Thông tin ----
+:: ---- Thong tin ----
 echo.
 echo =====================================================
 echo    HE THONG DANG CHAY!
