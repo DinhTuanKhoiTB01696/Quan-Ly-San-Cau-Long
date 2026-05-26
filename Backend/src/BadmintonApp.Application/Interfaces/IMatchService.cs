@@ -12,4 +12,7 @@ public interface IMatchService
     Task UpdateStatusAsync(int id, int userId, MatchStatus status);
     Task DeleteAsync(int id, int userId, bool isAdmin);
     Task AutoExpireMatchesAsync();
+
+    Task JoinMatchAsync(int matchId, int userId);
+    Task LeaveMatchAsync(int matchId, int userId);
 }

@@ -113,4 +113,48 @@ public class MatchesController : ControllerBase
             return NotFound();
         }
     }
+
+    [Authorize]
+    [HttpPost("{id}/join")]
+    public async Task<IActionResult> Join(int id)
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+        try
+        {
+            await _matchService.JoinMatchAsync(id, userId);
+            return Ok(new { message = "Tham gia kèo thành công" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    [Authorize]
+    [HttpPost("{id}/leave")]
+    public async Task<IActionResult> Leave(int id)
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+        try
+        {
+            await _matchService.LeaveMatchAsync(id, userId);
+            return Ok(new { message = "Đã rời khỏi kèo" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
 }

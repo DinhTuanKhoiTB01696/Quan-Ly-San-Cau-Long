@@ -13,14 +13,16 @@ var builder = WebApplication.CreateBuilder(args);
 // --- CORS ---
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowVueApp", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
-              .AllowAnyHeader()
+        policy.AllowAnyOrigin()
               .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowAnyHeader();
     });
 });
+
+// Register Background Services
+builder.Services.AddHostedService<BadmintonApp.API.BackgroundServices.MatchExpirationService>();
 
 // --- Database ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

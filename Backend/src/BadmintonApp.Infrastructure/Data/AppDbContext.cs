@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Match> Matches => Set<Match>();
     public DbSet<Report> Reports => Set<Report>();
     public DbSet<Feedback> Feedbacks => Set<Feedback>();
+    public DbSet<MatchParticipant> MatchParticipants => Set<MatchParticipant>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,5 +49,20 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Match>()
             .Property(m => m.Cost)
             .HasPrecision(18, 2);
+
+        modelBuilder.Entity<MatchParticipant>()
+            .HasKey(mp => new { mp.MatchId, mp.UserId });
+
+        modelBuilder.Entity<MatchParticipant>()
+            .HasOne(mp => mp.Match)
+            .WithMany(m => m.Participants)
+            .HasForeignKey(mp => mp.MatchId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MatchParticipant>()
+            .HasOne(mp => mp.User)
+            .WithMany(u => u.JoinedMatches)
+            .HasForeignKey(mp => mp.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

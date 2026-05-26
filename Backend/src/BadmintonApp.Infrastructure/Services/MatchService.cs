@@ -148,6 +148,63 @@ public class MatchService : IMatchService
         }
     }
 
+    public async Task JoinMatchAsync(int matchId, int userId)
+    {
+        var match = await _context.Matches
+            .Include(m => m.Participants)
+            .FirstOrDefaultAsync(m => m.Id == matchId)
+            ?? throw new KeyNotFoundException("Match not found");
+
+        if (match.Status != MatchStatus.Open)
+            throw new InvalidOperationException("This match is not open for joining.");
+
+        if (match.HostUserId == userId)
+            throw new InvalidOperationException("Host cannot join their own match as a participant.");
+
+        if (match.Participants.Any(p => p.UserId == userId))
+            throw new InvalidOperationException("You have already joined this match.");
+
+        if (match.SlotsFilled >= match.SlotsTotal)
+            throw new InvalidOperationException("This match is already full.");
+
+        match.Participants.Add(new MatchParticipant
+        {
+            MatchId = matchId,
+            UserId = userId,
+            JoinedAt = DateTime.UtcNow
+        });
+
+        match.SlotsFilled++;
+
+        if (match.SlotsFilled >= match.SlotsTotal)
+        {
+            match.Status = MatchStatus.Full;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task LeaveMatchAsync(int matchId, int userId)
+    {
+        var match = await _context.Matches
+            .Include(m => m.Participants)
+            .FirstOrDefaultAsync(m => m.Id == matchId)
+            ?? throw new KeyNotFoundException("Match not found");
+
+        var participant = match.Participants.FirstOrDefault(p => p.UserId == userId)
+            ?? throw new InvalidOperationException("You are not a participant of this match.");
+
+        match.Participants.Remove(participant);
+        match.SlotsFilled--;
+
+        if (match.Status == MatchStatus.Full && match.SlotsFilled < match.SlotsTotal)
+        {
+            match.Status = MatchStatus.Open;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
     private static MatchDto MapToDto(Match m)
     {
         return new MatchDto

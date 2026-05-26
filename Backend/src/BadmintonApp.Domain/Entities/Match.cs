@@ -30,4 +30,5 @@ public class Match
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<Report> Reports { get; set; } = new List<Report>();
+    public ICollection<MatchParticipant> Participants { get; set; } = new List<MatchParticipant>();
 }
