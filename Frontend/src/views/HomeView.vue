@@ -181,8 +181,6 @@ const handleLeave = async (matchId) => {
 .text-center { text-align: center; }
 .p-4 { padding: 24px; }
 .text-danger { color: var(--danger-color); }
-  border: 1px dashed var(--border-color);
-}
 .fab {
   position: fixed;
   bottom: 24px;
