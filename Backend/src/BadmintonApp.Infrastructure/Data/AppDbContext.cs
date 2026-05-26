@@ -40,5 +40,13 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(r => r.ReportedByUserId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Court>()
+            .Property(c => c.Price)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Match>()
+            .Property(m => m.Cost)
+            .HasPrecision(18, 2);
     }
 }
