@@ -30,6 +30,12 @@ const routes = [
     name: 'my-matches',
     component: () => import('../views/MyMatchesView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin',
+    name: 'admin',
+    component: () => import('../views/AdminDashboard.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
   }
 ]
 
@@ -45,6 +51,8 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !isAuthenticated) {
     next({ name: 'login', query: { redirect: to.fullPath } })
   } else if (to.meta.requiresGuest && isAuthenticated) {
+    next({ name: 'home' })
+  } else if (to.meta.requiresAdmin && authStore.user?.role !== 'Admin') {
     next({ name: 'home' })
   } else {
     next()
