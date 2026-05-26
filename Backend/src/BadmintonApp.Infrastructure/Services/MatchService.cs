@@ -1,0 +1,180 @@
+using BadmintonApp.Application.DTOs.Matches;
+using BadmintonApp.Application.DTOs.Courts;
+using BadmintonApp.Application.Interfaces;
+using BadmintonApp.Domain.Entities;
+using BadmintonApp.Domain.Enums;
+using BadmintonApp.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace BadmintonApp.Infrastructure.Services;
+
+public class MatchService : IMatchService
+{
+    private readonly AppDbContext _context;
+
+    public MatchService(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<IEnumerable<MatchDto>> GetAllAsync(Area? area, Level? level, MatchStatus? status)
+    {
+        var query = _context.Matches.Include(m => m.Court).AsQueryable();
+
+        if (area.HasValue)
+            query = query.Where(m => m.Court.Area == area.Value);
+        
+        if (level.HasValue)
+            query = query.Where(m => m.Level == level.Value);
+            
+        if (status.HasValue)
+            query = query.Where(m => m.Status == status.Value);
+
+        return await query
+            .OrderByDescending(m => m.Status == MatchStatus.Open) // Open first
+            .ThenBy(m => m.Date)
+            .ThenBy(m => m.TimeStart)
+            .Select(m => MapToDto(m))
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<MatchDto>> GetByHostAsync(int hostUserId)
+    {
+        var matches = await _context.Matches
+            .Include(m => m.Court)
+            .Where(m => m.HostUserId == hostUserId)
+            .OrderByDescending(m => m.Date)
+            .ToListAsync();
+
+        return matches.Select(MapToDto);
+    }
+
+    public async Task<MatchDto?> GetByIdAsync(int id)
+    {
+        var m = await _context.Matches.Include(x => x.Court).FirstOrDefaultAsync(x => x.Id == id);
+        return m == null ? null : MapToDto(m);
+    }
+
+    public async Task<MatchDto> CreateAsync(int hostUserId, string hostName, CreateMatchDto createDto)
+    {
+        // Check trùng lặp
+        var isDuplicate = await _context.Matches.AnyAsync(m => 
+            m.CourtId == createDto.CourtId &&
+            m.Date.Date == createDto.Date.Date &&
+            ((createDto.TimeStart >= m.TimeStart && createDto.TimeStart < m.TimeEnd) ||
+             (createDto.TimeEnd > m.TimeStart && createDto.TimeEnd <= m.TimeEnd)) &&
+            m.Status != MatchStatus.Expired);
+            
+        if (isDuplicate)
+        {
+            throw new InvalidOperationException("Đã có kèo tại sân này trong khoảng thời gian trên.");
+        }
+
+        var match = new Match
+        {
+            CourtId = createDto.CourtId,
+            HostUserId = hostUserId,
+            HostName = hostName,
+            Zalo = createDto.Zalo,
+            Date = createDto.Date.Date,
+            TimeStart = createDto.TimeStart,
+            TimeEnd = createDto.TimeEnd,
+            SlotsTotal = createDto.SlotsTotal,
+            SlotsFilled = 0,
+            Level = createDto.Level,
+            Cost = createDto.Cost,
+            Note = createDto.Note,
+            Status = MatchStatus.Open
+        };
+
+        _context.Matches.Add(match);
+        await _context.SaveChangesAsync();
+
+        return await GetByIdAsync(match.Id) ?? throw new Exception("Create match failed");
+    }
+
+    public async Task UpdateStatusAsync(int id, int userId, MatchStatus status)
+    {
+        var match = await _context.Matches.FindAsync(id) 
+            ?? throw new KeyNotFoundException("Match not found");
+
+        if (match.HostUserId != userId)
+            throw new UnauthorizedAccessException("Only host can update match status");
+
+        match.Status = status;
+        if (status == MatchStatus.Full)
+        {
+            match.SlotsFilled = match.SlotsTotal;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(int id, int userId, bool isAdmin)
+    {
+        var match = await _context.Matches.FindAsync(id)
+            ?? throw new KeyNotFoundException("Match not found");
+
+        if (!isAdmin && match.HostUserId != userId)
+            throw new UnauthorizedAccessException("Not allowed to delete this match");
+
+        _context.Matches.Remove(match);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task AutoExpireMatchesAsync()
+    {
+        var now = DateTime.UtcNow;
+        // Chuyển sang giờ Việt Nam (UTC+7) cho logic đơn giản
+        var vnTime = now.AddHours(7);
+        var today = vnTime.Date;
+        var currentTime = vnTime.TimeOfDay;
+
+        // Cập nhật các kèo có giờ kết thúc đã qua quá 2 tiếng
+        var expiredMatches = await _context.Matches
+            .Where(m => m.Status != MatchStatus.Expired && 
+                       (m.Date < today || 
+                       (m.Date == today && m.TimeEnd.Add(TimeSpan.FromHours(2)) < currentTime)))
+            .ToListAsync();
+
+        foreach (var match in expiredMatches)
+        {
+            match.Status = MatchStatus.Expired;
+        }
+
+        if (expiredMatches.Any())
+        {
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    private static MatchDto MapToDto(Match m)
+    {
+        return new MatchDto
+        {
+            Id = m.Id,
+            CourtId = m.CourtId,
+            Court = m.Court == null ? null : new CourtDto
+            {
+                Id = m.Court.Id,
+                Name = m.Court.Name,
+                Area = m.Court.Area,
+                Address = m.Court.Address,
+                Price = m.Court.Price,
+                Rating = m.Court.Rating
+            },
+            HostUserId = m.HostUserId,
+            HostName = m.HostName,
+            Zalo = m.Zalo,
+            Date = m.Date,
+            TimeStart = m.TimeStart,
+            TimeEnd = m.TimeEnd,
+            SlotsTotal = m.SlotsTotal,
+            SlotsFilled = m.SlotsFilled,
+            Level = m.Level,
+            Cost = m.Cost,
+            Note = m.Note,
+            Status = m.Status
+        };
+    }
+}

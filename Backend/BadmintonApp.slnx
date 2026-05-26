@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BadmintonApp.API/BadmintonApp.API.csproj" />
+    <Project Path="src/BadmintonApp.Application/BadmintonApp.Application.csproj" />
+    <Project Path="src/BadmintonApp.Domain/BadmintonApp.Domain.csproj" />
+    <Project Path="src/BadmintonApp.Infrastructure/BadmintonApp.Infrastructure.csproj" />
+  </Folder>
+</Solution>

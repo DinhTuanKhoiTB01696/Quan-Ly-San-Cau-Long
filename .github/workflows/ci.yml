@@ -1,0 +1,58 @@
+name: CI - Build & Check
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  # ========================================
+  #  BACKEND - .NET 10 Build & Check
+  # ========================================
+  backend:
+    name: 🔧 Backend (.NET 10)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: ⚙️ Setup .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: 📦 Restore dependencies
+      run: dotnet restore
+      working-directory: ./Backend
+
+    - name: 🏗️ Build
+      run: dotnet build --no-restore --configuration Release
+      working-directory: ./Backend
+
+  # ========================================
+  #  FRONTEND - Vue 3 + Vite Build & Check
+  # ========================================
+  frontend:
+    name: 🎨 Frontend (Vue 3)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: ⚙️ Setup Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: Frontend/package-lock.json
+
+    - name: 📦 Install dependencies
+      working-directory: ./Frontend
+      run: npm ci
+
+    - name: 🏗️ Build
+      working-directory: ./Frontend
+      run: npm run build
