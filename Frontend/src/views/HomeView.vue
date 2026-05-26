@@ -9,8 +9,8 @@
 
     <FilterBar @filter-changed="onFilterChange" />
 
-    <div v-if="matchStore.loading" class="text-center p-4">
-      Đang tải danh sách kèo...
+    <div v-if="matchStore.loading" class="match-list">
+      <MatchCardSkeleton v-for="i in 3" :key="i" />
     </div>
 
     <div v-else-if="matchStore.error" class="text-danger text-center p-4">
@@ -43,11 +43,14 @@
 import { onMounted } from 'vue'
 import { useMatchStore } from '@/stores/matches'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from 'vue-toastification'
 import MatchCard from '@/components/MatchCard.vue'
+import MatchCardSkeleton from '@/components/MatchCardSkeleton.vue'
 import FilterBar from '@/components/FilterBar.vue'
 
 const matchStore = useMatchStore()
 const authStore = useAuthStore()
+const toast = useToast()
 
 onMounted(() => {
   matchStore.fetchMatches({ status: 0 }) // Mặc định lấy kèo đang mở
@@ -60,6 +63,7 @@ const onFilterChange = (filters) => {
 const handleMarkFull = async (matchId) => {
   if(confirm('Bạn xác nhận kèo này đã đủ người?')) {
     await matchStore.updateStatus(matchId, 1) // 1 = Full
+    toast.success('Đã cập nhật trạng thái!')
   }
 }
 
@@ -67,11 +71,11 @@ const handleJoin = async (matchId) => {
   if(confirm('Bạn xác nhận muốn tham gia kèo này?')) {
     const success = await matchStore.joinMatch(matchId)
     if (success) {
-      alert('Tham gia thành công! Bạn có thể xem link Zalo của Host.')
+      toast.success('Tham gia thành công! Bạn có thể xem link Zalo của Host.')
       // Refetch to update participantIds and slots
       matchStore.fetchMatches({ status: 0 }) 
     } else {
-      alert(matchStore.error || 'Tham gia thất bại')
+      toast.error(matchStore.error || 'Tham gia thất bại')
     }
   }
 }
@@ -80,10 +84,10 @@ const handleLeave = async (matchId) => {
   if(confirm('Bạn chắc chắn muốn hủy tham gia kèo này?')) {
     const success = await matchStore.leaveMatch(matchId)
     if (success) {
-      alert('Đã hủy tham gia.')
+      toast.success('Đã hủy tham gia.')
       matchStore.fetchMatches({ status: 0 }) 
     } else {
-      alert(matchStore.error || 'Hủy tham bại')
+      toast.error(matchStore.error || 'Hủy tham gia thất bại')
     }
   }
 }

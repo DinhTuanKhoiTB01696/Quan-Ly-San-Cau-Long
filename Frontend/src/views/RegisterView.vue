@@ -44,21 +44,32 @@
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from 'vue-toastification'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const toast = useToast()
 
 const form = reactive({
   username: '',
   password: '',
+  confirmPassword: '',
   fullName: '',
   phone: ''
 })
 
 const handleSubmit = async () => {
+  if (form.password !== form.confirmPassword) {
+    toast.error('Mật khẩu xác nhận không khớp!')
+    return
+  }
+
   const success = await authStore.register(form)
   if (success) {
+    toast.success('Đăng ký thành công!')
     router.push('/')
+  } else if (authStore.error) {
+    toast.error(authStore.error)
   }
 }
 </script>

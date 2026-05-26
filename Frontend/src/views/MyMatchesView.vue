@@ -5,8 +5,8 @@
       <h2>Kèo Của Tôi</h2>
     </div>
 
-    <div v-if="matchStore.loading" class="text-center p-4">
-      Đang tải danh sách...
+    <div v-if="matchStore.loading" class="match-list p-4">
+      <MatchCardSkeleton v-for="i in 2" :key="i" />
     </div>
 
     <div v-else-if="matchStore.myMatches.length === 0" class="empty-state p-4 text-center">
@@ -29,6 +29,7 @@
 import { onMounted } from 'vue'
 import { useMatchStore } from '@/stores/matches'
 import MatchCard from '@/components/MatchCard.vue'
+import MatchCardSkeleton from '@/components/MatchCardSkeleton.vue'
 
 const matchStore = useMatchStore()
 

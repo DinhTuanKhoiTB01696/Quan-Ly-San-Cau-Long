@@ -92,12 +92,15 @@
 import { ref, onMounted, watch } from 'vue'
 import api from '@/api/axios'
 import CourtModal from '@/components/CourtModal.vue'
+import { useToast } from 'vue-toastification'
 
 const currentTab = ref('courts')
 const courts = ref([])
 const reports = ref([])
 const loading = ref(false)
 const error = ref(null)
+
+const toast = useToast()
 
 const showCourtModal = ref(false)
 const selectedCourt = ref(null)
@@ -140,9 +143,9 @@ const handleDeleteCourt = async (id) => {
     try {
       await api.delete(`/courts/${id}`)
       courts.value = courts.value.filter(c => c.id !== id)
-      alert('Đã xóa')
+      toast.success('Đã xóa sân')
     } catch {
-      alert('Xóa thất bại')
+      toast.error('Xóa thất bại')
     }
   }
 }
@@ -162,16 +165,16 @@ const handleSaveCourt = async (courtData) => {
     if (selectedCourt.value) {
       // Edit
       await api.put(`/courts/${selectedCourt.value.id}`, courtData)
-      alert('Cập nhật thành công')
+      toast.success('Cập nhật thành công')
     } else {
       // Create
       await api.post('/courts', courtData)
-      alert('Tạo mới thành công')
+      toast.success('Tạo mới thành công')
     }
     showCourtModal.value = false
     fetchCourts() // reload
   } catch (err) {
-    alert(err.response?.data?.message || 'Lưu thất bại')
+    toast.error(err.response?.data?.message || 'Lưu thất bại')
   }
 }
 
@@ -179,9 +182,9 @@ const handleResolveReport = async (id) => {
   try {
     await api.put(`/reports/${id}/resolve`)
     reports.value = reports.value.filter(r => r.id !== id)
-    alert('Đã đánh dấu xử lý')
+    toast.success('Đã đánh dấu xử lý')
   } catch {
-    alert('Lỗi xử lý')
+    toast.error('Lỗi xử lý')
   }
 }
 

@@ -5,7 +5,9 @@
       
       <div class="nav-links">
         <template v-if="authStore.isAuthenticated">
-          <span class="user-greeting">Chào, {{ authStore.user?.fullName }}</span>
+          <router-link to="/profile" class="nav-link user-greeting" style="font-weight:bold; color:var(--text-primary)">
+            Chào, {{ authStore.user?.fullName }}
+          </router-link>
           <router-link v-if="authStore.user?.role === 'Admin'" to="/admin" class="nav-link" style="color:var(--primary-color)">Admin Panel</router-link>
           <router-link to="/my-matches" class="nav-link">Kèo của tôi</router-link>
           <button @click="handleLogout" class="btn btn-outline btn-sm">Đăng xuất</button>

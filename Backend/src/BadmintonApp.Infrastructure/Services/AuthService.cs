@@ -55,6 +55,19 @@ public class AuthService : IAuthService
         return GenerateAuthResponse(user);
     }
 
+    public async Task ChangePasswordAsync(int userId, string oldPassword, string newPassword)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+            throw new KeyNotFoundException("Không tìm thấy người dùng");
+
+        if (!BCrypt.Net.BCrypt.Verify(oldPassword, user.PasswordHash))
+            throw new UnauthorizedAccessException("Mật khẩu cũ không chính xác");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        await _context.SaveChangesAsync();
+    }
+
     private AuthResponseDto GenerateAuthResponse(User user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();

@@ -34,19 +34,28 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from 'vue-toastification'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const toast = useToast()
 
 const username = ref('')
 const password = ref('')
 
 const handleSubmit = async () => {
-  const success = await authStore.login(username.value, password.value)
-  if (success) {
-    const redirect = route.query.redirect || '/'
-    router.push(redirect)
+  try {
+    const success = await authStore.login(username.value, password.value)
+    if (success) {
+      toast.success('Đăng nhập thành công')
+      const redirect = route.query.redirect || '/'
+      router.push(redirect)
+    } else {
+      toast.error(authStore.error || 'Đăng nhập thất bại')
+    }
+  } catch (err) {
+    toast.error('Đã xảy ra lỗi hệ thống')
   }
 }
 </script>

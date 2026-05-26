@@ -80,10 +80,12 @@ import { reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCourtStore } from '@/stores/courts'
 import { useMatchStore } from '@/stores/matches'
+import { useToast } from 'vue-toastification'
 
 const router = useRouter()
 const courtStore = useCourtStore()
 const matchStore = useMatchStore()
+const toast = useToast()
 
 const today = computed(() => {
   const d = new Date()
@@ -110,7 +112,7 @@ onMounted(() => {
 
 const handleSubmit = async () => {
   if (form.timeStart >= form.timeEnd) {
-    alert('Giờ bắt đầu phải nhỏ hơn giờ kết thúc!')
+    toast.error('Giờ bắt đầu phải nhỏ hơn giờ kết thúc!')
     return
   }
 
@@ -123,7 +125,10 @@ const handleSubmit = async () => {
 
   const success = await matchStore.createMatch(payload)
   if (success) {
-    router.push('/')
+    toast.success('Tạo kèo thành công!')
+    router.push('/my-matches')
+  } else {
+    toast.error(matchStore.error || 'Tạo kèo thất bại')
   }
 }
 
