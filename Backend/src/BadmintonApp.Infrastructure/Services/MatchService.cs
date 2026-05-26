@@ -130,13 +130,22 @@ public class MatchService : IMatchService
         var vnTime = now.AddHours(7);
         var today = vnTime.Date;
         var currentTime = vnTime.TimeOfDay;
+        var timeLimit = currentTime.Subtract(TimeSpan.FromHours(2));
+
+        IQueryable<Match> query = _context.Matches.Where(m => m.Status != MatchStatus.Expired);
+
+        if (timeLimit < TimeSpan.Zero)
+        {
+            // Nếu timeLimit < 0 (vd mới 1h sáng), thì không có kèo nào của ngày hôm nay có thể đã kết thúc quá 2 tiếng.
+            query = query.Where(m => m.Date < today);
+        }
+        else
+        {
+            query = query.Where(m => m.Date < today || (m.Date == today && m.TimeEnd < timeLimit));
+        }
 
         // Cập nhật các kèo có giờ kết thúc đã qua quá 2 tiếng
-        var expiredMatches = await _context.Matches
-            .Where(m => m.Status != MatchStatus.Expired && 
-                       (m.Date < today || 
-                       (m.Date == today && m.TimeEnd.Add(TimeSpan.FromHours(2)) < currentTime)))
-            .ToListAsync();
+        var expiredMatches = await query.ToListAsync();
 
         foreach (var match in expiredMatches)
         {
