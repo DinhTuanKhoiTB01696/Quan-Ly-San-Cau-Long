@@ -18,7 +18,7 @@ public static class DbSeeder
             context.Users.Add(new User
             {
                 Username = "admin",
-                PasswordHash = "$2a$11$N5h.gC/Z1jM4i4R9JvO41uw0G4Y1Wc9O1f3eJ3O8wD3k1.v3/4FzW", // Admin@123
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
                 FullName = "Administrator",
                 Phone = "0999999999",
                 Role = "Admin",
