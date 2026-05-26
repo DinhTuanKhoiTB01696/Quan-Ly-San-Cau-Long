@@ -30,12 +30,13 @@ public class MatchService : IMatchService
         if (status.HasValue)
             query = query.Where(m => m.Status == status.Value);
 
-        return await query
-            .OrderByDescending(m => m.Status == MatchStatus.Open) // Open first
+        var matches = await query
+            .OrderBy(m => m.Status) // Open (1), Full (2), Expired (3)
             .ThenBy(m => m.Date)
             .ThenBy(m => m.TimeStart)
-            .Select(m => MapToDto(m))
             .ToListAsync();
+
+        return matches.Select(MapToDto);
     }
 
     public async Task<IEnumerable<MatchDto>> GetByHostAsync(int hostUserId)
@@ -58,12 +59,14 @@ public class MatchService : IMatchService
 
     public async Task<MatchDto> CreateAsync(int hostUserId, string hostName, CreateMatchDto createDto)
     {
+        var targetDate = createDto.Date.Date;
         // Check trùng lặp
         var isDuplicate = await _context.Matches.AnyAsync(m => 
             m.CourtId == createDto.CourtId &&
-            m.Date.Date == createDto.Date.Date &&
+            m.Date == targetDate &&
             ((createDto.TimeStart >= m.TimeStart && createDto.TimeStart < m.TimeEnd) ||
-             (createDto.TimeEnd > m.TimeStart && createDto.TimeEnd <= m.TimeEnd)) &&
+             (createDto.TimeEnd > m.TimeStart && createDto.TimeEnd <= m.TimeEnd) ||
+             (createDto.TimeStart <= m.TimeStart && createDto.TimeEnd >= m.TimeEnd)) &&
             m.Status != MatchStatus.Expired);
             
         if (isDuplicate)
