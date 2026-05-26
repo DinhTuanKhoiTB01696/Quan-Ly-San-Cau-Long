@@ -47,13 +47,7 @@ if errorlevel 1 (
 )
 echo.
 
-echo [5/5] Seed Data - 20 san cau long + tai khoan admin...
-sqlcmd -S KHOI\SQLEXPRESS -d BadmintonDB -E -i "%ROOT%seed_data.sql"
-if errorlevel 1 (
-    echo [CANH BAO] Seed data co the that bai. Kiem tra SQL Server.
-) else (
-    echo        Seed data thanh cong!
-)
+echo [5/5] Seed Data - 20 san cau long + tai khoan admin se duoc tu dong them boi EF Core khi khoi dong...
 
 echo.
 echo =====================================================
