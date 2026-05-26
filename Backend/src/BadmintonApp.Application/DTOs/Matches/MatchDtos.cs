@@ -27,7 +27,15 @@ public class MatchDto
     
     public MatchStatus Status { get; set; }
     public IEnumerable<int> ParticipantIds { get; set; } = new List<int>();
+    public IEnumerable<ParticipantDto> Participants { get; set; } = new List<ParticipantDto>();
     public int ReportCount { get; set; }
+}
+
+public class ParticipantDto
+{
+    public int UserId { get; set; }
+    public string FullName { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
 }
 
 public class CreateMatchDto

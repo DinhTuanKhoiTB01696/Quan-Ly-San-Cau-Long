@@ -1,5 +1,5 @@
 <template>
-  <div class="card match-card" :class="{'is-full': match.status === 1, 'is-expired': match.status === 2}">
+  <div class="card match-card" :class="{'is-full': match.status === 1, 'is-expired': match.status === 2}" @click="goToDetail" style="cursor: pointer;">
     <div class="match-header">
       <div class="court-info">
         <h3 class="court-name">{{ match.court?.name || 'Sân không xác định' }}</h3>
@@ -50,10 +50,10 @@
         
         <!-- Participant Logic -->
         <template v-if="!isHost && auth.isAuthenticated && match.status === 1">
-          <button v-if="!hasJoined" @click="$emit('join', match.id)" class="btn btn-primary btn-sm">Tham Gia</button>
+          <button v-if="!hasJoined" @click.stop="$emit('join', match.id)" class="btn btn-primary btn-sm">Tham Gia</button>
           <template v-else>
-            <button @click="$emit('leave', match.id)" class="btn btn-outline btn-sm" style="color: var(--danger-color); border-color: var(--danger-color);">Hủy</button>
-            <a :href="'https://zalo.me/' + match.zalo" target="_blank" class="btn btn-primary btn-sm zalo-btn">
+            <button @click.stop="$emit('leave', match.id)" class="btn btn-outline btn-sm" style="color: var(--danger-color); border-color: var(--danger-color);">Hủy</button>
+            <a :href="'https://zalo.me/' + match.zalo" target="_blank" @click.stop class="btn btn-primary btn-sm zalo-btn">
               💬 Liên hệ Host (Zalo)
             </a>
           </template>
@@ -70,8 +70,10 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
+const router = useRouter()
 const auth = useAuthStore()
 
 const props = defineProps({
@@ -86,6 +88,10 @@ const props = defineProps({
 })
 
 defineEmits(['mark-full', 'join', 'leave'])
+
+const goToDetail = () => {
+  router.push(`/matches/${props.match.id}`)
+}
 
 const hasJoined = computed(() => {
   if (!auth.isAuthenticated || !auth.user) return false;

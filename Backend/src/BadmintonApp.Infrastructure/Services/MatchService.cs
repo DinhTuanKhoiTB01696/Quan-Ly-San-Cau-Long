@@ -53,7 +53,11 @@ public class MatchService : IMatchService
 
     public async Task<MatchDto?> GetByIdAsync(int id)
     {
-        var m = await _context.Matches.Include(x => x.Court).Include(x => x.Participants).FirstOrDefaultAsync(x => x.Id == id);
+        var m = await _context.Matches
+            .Include(x => x.Court)
+            .Include(x => x.Participants)
+                .ThenInclude(p => p.User)
+            .FirstOrDefaultAsync(x => x.Id == id);
         return m == null ? null : MapToDto(m);
     }
 
@@ -245,7 +249,13 @@ public class MatchService : IMatchService
             Cost = m.Cost,
             Note = m.Note,
             Status = m.Status,
-            ParticipantIds = m.Participants?.Select(p => p.UserId).ToList() ?? new List<int>()
+            ParticipantIds = m.Participants?.Select(p => p.UserId).ToList() ?? new List<int>(),
+            Participants = m.Participants?.Where(p => p.User != null).Select(p => new ParticipantDto 
+            {
+                UserId = p.UserId,
+                FullName = p.User.FullName,
+                Username = p.User.Username
+            }).ToList() ?? new List<ParticipantDto>()
         };
     }
 }

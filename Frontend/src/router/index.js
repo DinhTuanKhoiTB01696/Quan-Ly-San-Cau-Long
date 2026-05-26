@@ -8,6 +8,16 @@ const routes = [
     component: () => import('../views/HomeView.vue')
   },
   {
+    path: '/courts',
+    name: 'courts',
+    component: () => import('../views/CourtsView.vue')
+  },
+  {
+    path: '/courts/:id',
+    name: 'court-detail',
+    component: () => import('../views/CourtDetailView.vue')
+  },
+  {
     path: '/login',
     name: 'login',
     component: () => import('../views/LoginView.vue'),
@@ -30,6 +40,11 @@ const routes = [
     name: 'my-matches',
     component: () => import('../views/MyMatchesView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/matches/:id',
+    name: 'match-detail',
+    component: () => import('../views/MatchDetailView.vue')
   },
   {
     path: '/profile',
