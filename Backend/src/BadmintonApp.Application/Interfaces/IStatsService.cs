@@ -4,5 +4,5 @@ namespace BadmintonApp.Application.Interfaces;
 
 public interface IStatsService
 {
-    Task<StatsDto> GetStatsAsync();
+    Task<DashboardStatsDto> GetDashboardStatsAsync();
 }

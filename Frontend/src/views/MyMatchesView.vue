@@ -38,8 +38,14 @@ onMounted(() => {
 })
 
 const handleMarkFull = async (matchId) => {
-  if(confirm('Bạn xác nhận kèo này đã đủ người?')) {
-    await matchStore.updateStatus(matchId, 1) // 1 = Full
+  if (confirm('Bạn xác nhận kèo này đã đủ người?')) {
+    const success = await matchStore.updateStatus(matchId, 2)
+    if (success) {
+      toast.success('Đã cập nhật trạng thái!')
+      matchStore.fetchMyMatches()
+    } else {
+      toast.error('Cập nhật thất bại')
+    }
   }
 }
 </script>

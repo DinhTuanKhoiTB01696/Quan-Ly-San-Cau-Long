@@ -1,9 +1,7 @@
 using BadmintonApp.Application.DTOs.Stats;
-using BadmintonApp.Domain.Enums;
-using BadmintonApp.Infrastructure.Data;
+using BadmintonApp.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace BadmintonApp.API.Controllers;
 
@@ -12,56 +10,17 @@ namespace BadmintonApp.API.Controllers;
 [Authorize(Roles = "Admin")]
 public class StatsController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IStatsService _statsService;
 
-    public StatsController(AppDbContext context)
+    public StatsController(IStatsService statsService)
     {
-        _context = context;
+        _statsService = statsService;
     }
 
     [HttpGet("dashboard")]
     public async Task<IActionResult> GetDashboardStats()
     {
-        var now = DateTime.UtcNow;
-        var startOfMonth = new DateTime(now.Year, now.Month, 1);
-
-        var totalUsers = await _context.Users.CountAsync();
-        var newUsersThisMonth = await _context.Users.CountAsync(u => u.CreatedAt >= startOfMonth);
-
-        var totalCourts = await _context.Courts.CountAsync();
-        
-        var totalMatches = await _context.Matches.CountAsync();
-        var openMatches = await _context.Matches.CountAsync(m => m.Status == MatchStatus.Open);
-        var fullMatches = await _context.Matches.CountAsync(m => m.Status == MatchStatus.Full);
-        var expiredMatches = await _context.Matches.CountAsync(m => m.Status == MatchStatus.Expired);
-
-        var pendingReports = await _context.Reports.CountAsync(r => r.Status == ReportStatus.Pending);
-
-        var topCourtsQuery = await _context.Matches
-            .GroupBy(m => new { m.CourtId, m.Court.Name })
-            .Select(g => new TopCourtDto
-            {
-                CourtId = g.Key.CourtId,
-                CourtName = g.Key.Name,
-                MatchCount = g.Count()
-            })
-            .OrderByDescending(x => x.MatchCount)
-            .Take(5)
-            .ToListAsync();
-
-        var stats = new DashboardStatsDto
-        {
-            TotalUsers = totalUsers,
-            NewUsersThisMonth = newUsersThisMonth,
-            TotalCourts = totalCourts,
-            TotalMatches = totalMatches,
-            OpenMatches = openMatches,
-            FullMatches = fullMatches,
-            ExpiredMatches = expiredMatches,
-            PendingReports = pendingReports,
-            TopCourts = topCourtsQuery
-        };
-
+        var stats = await _statsService.GetDashboardStatsAsync();
         return Ok(stats);
     }
 }

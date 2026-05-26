@@ -22,11 +22,10 @@ apiClient.interceptors.request.use(config => {
 apiClient.interceptors.response.use(response => {
   return response
 }, error => {
-  if (error.response && error.response.status === 401) {
-    // Tự động logout nếu token hết hạn (tuỳ chọn)
+  if (error.response?.status === 401) {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
-    // Nếu dùng vue-router ở ngoài store, có thể cần đẩy về login: window.location.href = '/login'
+    window.location.href = '/login'
   }
   return Promise.reject(error)
 })

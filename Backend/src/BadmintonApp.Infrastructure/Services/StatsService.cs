@@ -15,28 +15,46 @@ public class StatsService : IStatsService
         _context = context;
     }
 
-    public async Task<StatsDto> GetStatsAsync()
+    public async Task<DashboardStatsDto> GetDashboardStatsAsync()
     {
-        var vnTime = DateTime.UtcNow.AddHours(7);
-        var today = vnTime.Date;
+        var now = DateTime.UtcNow;
+        var startOfMonth = new DateTime(now.Year, now.Month, 1);
 
-        var totalMatchesToday = await _context.Matches
-            .CountAsync(m => m.Date == today);
+        var totalUsers = await _context.Users.CountAsync();
+        var newUsersThisMonth = await _context.Users.CountAsync(u => u.CreatedAt >= startOfMonth);
 
         var totalCourts = await _context.Courts.CountAsync();
 
-        var openMatches = await _context.Matches
-            .CountAsync(m => m.Status == MatchStatus.Open);
+        var totalMatches = await _context.Matches.CountAsync();
+        var openMatches = await _context.Matches.CountAsync(m => m.Status == MatchStatus.Open);
+        var fullMatches = await _context.Matches.CountAsync(m => m.Status == MatchStatus.Full);
+        var expiredMatches = await _context.Matches.CountAsync(m => m.Status == MatchStatus.Expired);
 
-        var pendingReports = await _context.Reports
-            .CountAsync(r => r.Status == ReportStatus.Pending);
+        var pendingReports = await _context.Reports.CountAsync(r => r.Status == ReportStatus.Pending);
 
-        return new StatsDto
+        var topCourts = await _context.Matches
+            .GroupBy(m => new { m.CourtId, m.Court.Name })
+            .Select(g => new TopCourtDto
+            {
+                CourtId = g.Key.CourtId,
+                CourtName = g.Key.Name,
+                MatchCount = g.Count()
+            })
+            .OrderByDescending(x => x.MatchCount)
+            .Take(5)
+            .ToListAsync();
+
+        return new DashboardStatsDto
         {
-            TotalMatchesToday = totalMatchesToday,
+            TotalUsers = totalUsers,
+            NewUsersThisMonth = newUsersThisMonth,
             TotalCourts = totalCourts,
+            TotalMatches = totalMatches,
             OpenMatches = openMatches,
-            PendingReports = pendingReports
+            FullMatches = fullMatches,
+            ExpiredMatches = expiredMatches,
+            PendingReports = pendingReports,
+            TopCourts = topCourts
         };
     }
 }
