@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BadmintonApp.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260527151852_InitialCreate")]
+    [Migration("20260527160942_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

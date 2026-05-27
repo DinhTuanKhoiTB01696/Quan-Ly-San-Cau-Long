@@ -60,6 +60,20 @@
           và không gian thoáng đãng (trần {{ court.ceiling }}), sân luôn là sự lựa chọn hàng đầu của các lông thủ.
         </p>
 
+        <!-- Google Maps Integration -->
+        <h3 style="margin-bottom: 16px;">Vị trí trên Bản đồ</h3>
+        <div class="map-container" style="margin-bottom: 32px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+          <iframe 
+            width="100%" 
+            height="300" 
+            style="border:0;" 
+            loading="lazy" 
+            allowfullscreen 
+            referrerpolicy="no-referrer-when-downgrade" 
+            :src="`https://maps.google.com/maps?q=${encodeURIComponent(court.name + ' ' + court.address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`">
+          </iframe>
+        </div>
+
         <!-- Kèo đang mở tại sân này -->
         <h3 style="margin-bottom: 16px;">Kèo đang mở tại đây</h3>
         <div v-if="courtMatches.length === 0" class="empty-state text-center text-secondary py-4" style="background: #f8fafc; border-radius: 8px;">

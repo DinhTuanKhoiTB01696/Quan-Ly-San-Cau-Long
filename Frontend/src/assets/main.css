@@ -2,17 +2,17 @@
 
 :root {
   /* Colors */
-  --primary-color: #2563eb;
-  --primary-hover: #1d4ed8;
+  --primary-color: #3b82f6; /* Modern Blue */
+  --primary-hover: #2563eb;
   --secondary-color: #f8fafc;
-  --text-primary: #0f172a;
+  --text-primary: #1e293b;
   --text-secondary: #64748b;
   --success-color: #10b981;
   --danger-color: #ef4444;
   --warning-color: #f59e0b;
-  --border-color: #e2e8f0;
+  --border-color: rgba(226, 232, 240, 0.8);
   --background-color: #f1f5f9;
-  --card-bg: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.7);
 
   /* Layout */
   --max-width: 600px; /* Mobile-first approach */
@@ -38,7 +38,8 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: var(--background-color);
+  background: linear-gradient(135deg, #e0f2fe 0%, #f1f5f9 50%, #dbeafe 100%);
+  background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -48,9 +49,8 @@ body {
   max-width: var(--max-width);
   margin: 0 auto;
   min-height: 100vh;
-  background-color: var(--card-bg);
+  background-color: transparent;
   position: relative;
-  box-shadow: var(--shadow-lg);
 }
 
 /* Utilities */
@@ -73,15 +73,15 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   border: none;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
 }
 
 .btn-primary:active {
@@ -96,18 +96,20 @@ body {
 
 .card {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: var(--border-radius);
   border: 1px solid var(--glass-border);
   padding: var(--spacing-md);
   margin-bottom: var(--spacing-md);
   box-shadow: var(--shadow-md);
-  transition: transform 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 input, select, textarea {

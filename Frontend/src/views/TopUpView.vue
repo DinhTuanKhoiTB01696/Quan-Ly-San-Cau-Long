@@ -63,12 +63,12 @@ const transactionCode = computed(() => {
 
 const qrCodeUrl = computed(() => {
   if (!selectedPackage.value) return ''
-  const bank = 'VietinBank'
+  const bank = 'ICB'
   const account = '102880579767'
   const amount = selectedPackage.value.price
   const info = encodeURIComponent(transactionCode.value)
   const accountName = encodeURIComponent('DINH TUAN KHOI')
-  return `https://img.vietqr.io/image/${bank}-${account}-compact.png?amount=${amount}&addInfo=${info}&accountName=${accountName}`
+  return `https://img.vietqr.io/image/${bank}-${account}-print.png?amount=${amount}&addInfo=${info}&accountName=${accountName}`
 })
 
 const selectPackage = (pkg) => {
