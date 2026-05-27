@@ -18,9 +18,15 @@
           {{ authStore.error }}
         </div>
         
-        <button type="submit" class="btn btn-primary w-100" :disabled="authStore.loading">
+        <button type="submit" class="btn btn-primary w-100 mb-3" :disabled="authStore.loading">
           {{ authStore.loading ? 'Đang xử lý...' : 'Đăng Nhập' }}
         </button>
+
+        <div class="divider"><span>Hoặc</span></div>
+
+        <div class="google-btn-wrapper">
+          <GoogleLogin :callback="handleGoogleCallback" prompt auto-login />
+        </div>
       </form>
       
       <div class="auth-links text-center mt-3">
@@ -56,6 +62,19 @@ const handleSubmit = async () => {
     }
   } catch (err) {
     toast.error('Đã xảy ra lỗi hệ thống')
+  }
+}
+
+const handleGoogleCallback = async (response) => {
+  try {
+    if (response.credential) {
+      await authStore.googleLogin(response.credential)
+      toast.success('Đăng nhập Google thành công')
+      const redirect = route.query.redirect || '/'
+      router.push(redirect)
+    }
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Đăng nhập Google thất bại')
   }
 }
 </script>
@@ -94,4 +113,27 @@ const handleSubmit = async () => {
 .auth-links {
   font-size: 14px;
 }
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 16px 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border-color);
+}
+.divider span {
+  padding: 0 10px;
+}
+.google-btn-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.mb-3 { margin-bottom: 16px; }
 </style>

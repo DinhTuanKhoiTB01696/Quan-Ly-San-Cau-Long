@@ -30,6 +30,11 @@ public class UpdateProfileDto
     public string Phone { get; set; } = string.Empty;
 }
 
+public class GoogleLoginDto
+{
+    public string Token { get; set; } = string.Empty;
+}
+
 public class AuthResponseDto
 {
     public string Token { get; set; } = string.Empty;

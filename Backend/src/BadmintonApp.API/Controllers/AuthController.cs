@@ -18,12 +18,30 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginDto dto)
+    public async Task<ActionResult<AuthResponseDto>> Login(LoginDto loginDto)
     {
         try
         {
-            var result = await _authService.LoginAsync(dto);
-            return Ok(result);
+            var response = await _authService.LoginAsync(loginDto);
+            return Ok(response);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("google-login")]
+    public async Task<ActionResult<AuthResponseDto>> GoogleLogin([FromBody] GoogleLoginDto dto)
+    {
+        try
+        {
+            var response = await _authService.GoogleLoginAsync(dto);
+            return Ok(response);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (UnauthorizedAccessException ex)
         {

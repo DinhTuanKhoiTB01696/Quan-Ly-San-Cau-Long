@@ -84,6 +84,18 @@ export const useAuthStore = defineStore('auth', {
       } catch (err) {
         console.error('Failed to fetch me', err)
       }
+    },
+    async googleLogin(token) {
+      try {
+        const res = await api.post('/auth/google-login', { token })
+        this.token = res.data.token
+        this.user = res.data.user
+        this.credits = res.data.user.credits || 0
+        localStorage.setItem('token', this.token)
+        localStorage.setItem('user', JSON.stringify(this.user))
+      } catch (error) {
+        throw error
+      }
     }
   }
 })

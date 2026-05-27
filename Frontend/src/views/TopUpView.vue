@@ -49,9 +49,9 @@ const router = useRouter()
 const toast = useToast()
 
 const packages = [
-  { credits: 1, price: 10000 },
-  { credits: 5, price: 40000 },
-  { credits: 10, price: 70000 }
+  { credits: 10, price: 10000 },
+  { credits: 50, price: 40000 },
+  { credits: 100, price: 70000 }
 ]
 
 const selectedPackage = ref(null)
@@ -61,14 +61,14 @@ const transactionCode = computed(() => {
   return `CAULONG ${authStore.user?.username?.toUpperCase() || ''}`
 })
 
-// Demo using VietQR API with a dummy account (MBBank - 0123456789)
 const qrCodeUrl = computed(() => {
   if (!selectedPackage.value) return ''
-  const bank = 'MB'
-  const account = '0123456789'
+  const bank = 'VietinBank'
+  const account = '102880579767'
   const amount = selectedPackage.value.price
   const info = encodeURIComponent(transactionCode.value)
-  return `https://img.vietqr.io/image/${bank}-${account}-compact.png?amount=${amount}&addInfo=${info}&accountName=QUAN%20LY%20SAN`
+  const accountName = encodeURIComponent('DINH TUAN KHOI')
+  return `https://img.vietqr.io/image/${bank}-${account}-compact.png?amount=${amount}&addInfo=${info}&accountName=${accountName}`
 })
 
 const selectPackage = (pkg) => {

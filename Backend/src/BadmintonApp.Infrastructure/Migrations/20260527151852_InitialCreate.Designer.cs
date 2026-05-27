@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BadmintonApp.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260527143502_InitialCreate")]
+    [Migration("20260527151852_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -221,6 +221,36 @@ namespace BadmintonApp.Infrastructure.Migrations
                     b.ToTable("Reports");
                 });
 
+            modelBuilder.Entity("BadmintonApp.Domain.Entities.Transaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreditsAdded")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Transactions");
+                });
+
             modelBuilder.Entity("BadmintonApp.Domain.Entities.User", b =>
                 {
                     b.Property<int>("Id")
@@ -231,6 +261,9 @@ namespace BadmintonApp.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("Credits")
+                        .HasColumnType("int");
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -314,6 +347,17 @@ namespace BadmintonApp.Infrastructure.Migrations
                     b.Navigation("Match");
 
                     b.Navigation("ReportedByUser");
+                });
+
+            modelBuilder.Entity("BadmintonApp.Domain.Entities.Transaction", b =>
+                {
+                    b.HasOne("BadmintonApp.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BadmintonApp.Domain.Entities.Court", b =>

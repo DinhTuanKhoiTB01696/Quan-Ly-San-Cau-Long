@@ -2,6 +2,7 @@ using BadmintonApp.Application.DTOs.Feedback;
 using BadmintonApp.Application.Interfaces;
 using BadmintonApp.Domain.Entities;
 using BadmintonApp.Infrastructure.Data;
+using BadmintonApp.Application.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace BadmintonApp.Infrastructure.Services;
@@ -17,6 +18,12 @@ public class FeedbackService : IFeedbackService
 
     public async Task<FeedbackDto> CreateAsync(CreateFeedbackDto createDto)
     {
+        if (ProfanityFilter.ContainsProfanity(createDto.MissingFeature) || 
+            ProfanityFilter.ContainsProfanity(createDto.WantedCourt))
+        {
+            throw new InvalidOperationException("Nội dung góp ý chứa từ ngữ không phù hợp. Vui lòng sử dụng ngôn từ văn minh.");
+        }
+
         var feedback = new Feedback
         {
             IsHelpful = createDto.IsHelpful,

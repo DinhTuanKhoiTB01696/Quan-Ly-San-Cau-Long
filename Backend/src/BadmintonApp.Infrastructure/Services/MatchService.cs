@@ -4,6 +4,7 @@ using BadmintonApp.Application.Interfaces;
 using BadmintonApp.Domain.Entities;
 using BadmintonApp.Domain.Enums;
 using BadmintonApp.Infrastructure.Data;
+using BadmintonApp.Application.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace BadmintonApp.Infrastructure.Services;
@@ -101,6 +102,11 @@ public class MatchService : IMatchService
         if (createDto.SlotsTotal <= 0)
         {
             throw new InvalidOperationException("Tổng số người phải lớn hơn 0");
+        }
+
+        if (ProfanityFilter.ContainsProfanity(createDto.Note))
+        {
+            throw new InvalidOperationException("Nội dung ghi chú chứa từ ngữ không phù hợp. Vui lòng sử dụng ngôn từ văn minh.");
         }
 
         var user = await _context.Users.FindAsync(hostUserId) 

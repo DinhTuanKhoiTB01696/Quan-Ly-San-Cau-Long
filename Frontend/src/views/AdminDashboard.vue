@@ -45,25 +45,27 @@
         <!-- Chi tiết -->
         <div class="stat-panel full-width">
           <h3>Top Sân Được Yêu Thích Nhất</h3>
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Top</th>
-                <th>Tên Sân</th>
-                <th>Số lượng Kèo đã tạo</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(court, index) in stats.topCourts" :key="court.courtId">
-                <td>#{{ index + 1 }}</td>
-                <td>{{ court.courtName }}</td>
-                <td><strong>{{ court.matchCount }}</strong> kèo</td>
-              </tr>
-              <tr v-if="!stats.topCourts || stats.topCourts.length === 0">
-                <td colspan="3" class="text-center">Chưa có dữ liệu</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Top</th>
+                  <th>Tên Sân</th>
+                  <th>Số lượng Kèo đã tạo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(court, index) in stats.topCourts" :key="court.courtId">
+                  <td>#{{ index + 1 }}</td>
+                  <td>{{ court.courtName }}</td>
+                  <td><strong>{{ court.matchCount }}</strong> kèo</td>
+                </tr>
+                <tr v-if="!stats.topCourts || stats.topCourts.length === 0">
+                  <td colspan="3" class="text-center">Chưa có dữ liệu</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
         
         <!-- Biểu đồ -->
@@ -91,195 +93,207 @@
         <button class="btn btn-primary btn-sm" @click="openCreateModal">+ Thêm Sân</button>
       </div>
       
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Tên Sân</th>
-            <th>Khu Vực</th>
-            <th>Giá/Giờ</th>
-            <th>Đánh giá</th>
-            <th>Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="court in courts" :key="court.id">
-            <td>{{ court.id }}</td>
-            <td>{{ court.name }}</td>
-            <td>{{ areaName(court.area) }}</td>
-            <td>{{ formatCurrency(court.price) }}</td>
-            <td>⭐ {{ court.rating }}</td>
-            <td>
-              <button class="btn btn-outline btn-sm" @click="openEditModal(court)">Sửa</button>
-              <button class="btn btn-danger btn-sm" style="margin-left:4px" @click="handleDeleteCourt(court.id)">Xóa</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tên Sân</th>
+              <th>Khu Vực</th>
+              <th>Giá/Giờ</th>
+              <th>Đánh giá</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="court in courts" :key="court.id">
+              <td>{{ court.id }}</td>
+              <td>{{ court.name }}</td>
+              <td>{{ areaName(court.area) }}</td>
+              <td>{{ formatCurrency(court.price) }}</td>
+              <td>⭐ {{ court.rating }}</td>
+              <td>
+                <button class="btn btn-outline btn-sm" @click="openEditModal(court)">Sửa</button>
+                <button class="btn btn-danger btn-sm" style="margin-left:4px" @click="handleDeleteCourt(court.id)">Xóa</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Quản Lý Người Dùng -->
     <div v-else-if="currentTab === 'users'" class="tab-content">
       <h3>Danh sách Người Dùng</h3>
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Tên đăng nhập</th>
-            <th>Họ và Tên</th>
-            <th>SĐT</th>
-            <th>Quyền</th>
-            <th>Trạng thái</th>
-            <th>Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="user in users" :key="user.id">
-            <td>{{ user.id }}</td>
-            <td>{{ user.username }}</td>
-            <td>{{ user.fullName }}</td>
-            <td>{{ user.phone || 'N/A' }}</td>
-            <td>{{ user.role }}</td>
-            <td>
-              <span :class="user.isLocked ? 'text-danger' : 'text-success'">
-                {{ user.isLocked ? 'Bị Khóa' : 'Hoạt động' }}
-              </span>
-            </td>
-            <td>
-              <button 
-                v-if="user.role !== 'Admin'"
-                class="btn btn-sm" 
-                :class="user.isLocked ? 'btn-primary' : 'btn-danger'" 
-                @click="handleToggleLock(user.id)"
-              >
-                {{ user.isLocked ? 'Mở Khóa' : 'Khóa' }}
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tên đăng nhập</th>
+              <th>Họ và Tên</th>
+              <th>SĐT</th>
+              <th>Quyền</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="user in users" :key="user.id">
+              <td>{{ user.id }}</td>
+              <td>{{ user.username }}</td>
+              <td>{{ user.fullName }}</td>
+              <td>{{ user.phone || 'N/A' }}</td>
+              <td>{{ user.role }}</td>
+              <td>
+                <span :class="user.isLocked ? 'text-danger' : 'text-success'">
+                  {{ user.isLocked ? 'Bị Khóa' : 'Hoạt động' }}
+                </span>
+              </td>
+              <td>
+                <button 
+                  v-if="user.role !== 'Admin'"
+                  class="btn btn-sm" 
+                  :class="user.isLocked ? 'btn-primary' : 'btn-danger'" 
+                  @click="handleToggleLock(user.id)"
+                >
+                  {{ user.isLocked ? 'Mở Khóa' : 'Khóa' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Quản Lý Kèo -->
     <div v-else-if="currentTab === 'matches'" class="tab-content">
       <h3>Tất Cả Các Kèo</h3>
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Host</th>
-            <th>Sân</th>
-            <th>Ngày & Giờ</th>
-            <th>Trạng thái</th>
-            <th>Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="match in matches" :key="match.id">
-            <td>{{ match.id }}</td>
-            <td>{{ match.hostName }}</td>
-            <td>{{ match.courtName }}</td>
-            <td>{{ new Date(match.date).toLocaleDateString('vi-VN') }} {{ match.time }}</td>
-            <td>{{ getMatchStatusText(match.status) }}</td>
-            <td>
-              <button class="btn btn-danger btn-sm" @click="handleDeleteMatch(match.id)">Xóa</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Host</th>
+              <th>Sân</th>
+              <th>Ngày & Giờ</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="match in matches" :key="match.id">
+              <td>{{ match.id }}</td>
+              <td>{{ match.hostName }}</td>
+              <td>{{ match.courtName }}</td>
+              <td>{{ new Date(match.date).toLocaleDateString('vi-VN') }} {{ match.time }}</td>
+              <td>{{ getMatchStatusText(match.status) }}</td>
+              <td>
+                <button class="btn btn-danger btn-sm" @click="handleDeleteMatch(match.id)">Xóa</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Quản Lý Báo Cáo -->
     <div v-else-if="currentTab === 'reports'" class="tab-content">
       <h3>Danh sách Báo Cáo Chờ Xử Lý</h3>
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Match ID</th>
-            <th>Lý do</th>
-            <th>Mô tả</th>
-            <th>Ngày gửi</th>
-            <th>Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="reports.length === 0">
-            <td colspan="6" class="text-center">Không có báo cáo nào.</td>
-          </tr>
-          <tr v-for="report in reports" :key="report.id">
-            <td>{{ report.id }}</td>
-            <td>{{ report.matchId }}</td>
-            <td>{{ reasonText(report.reason) }}</td>
-            <td>{{ report.description }}</td>
-            <td>{{ new Date(report.createdAt).toLocaleDateString('vi-VN') }}</td>
-            <td>
-              <button class="btn btn-primary btn-sm" @click="handleResolveReport(report.id)">Đã Xử Lý</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Match ID</th>
+              <th>Lý do</th>
+              <th>Mô tả</th>
+              <th>Ngày gửi</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="reports.length === 0">
+              <td colspan="6" class="text-center">Không có báo cáo nào.</td>
+            </tr>
+            <tr v-for="report in reports" :key="report.id">
+              <td>{{ report.id }}</td>
+              <td>{{ report.matchId }}</td>
+              <td>{{ reasonText(report.reason) }}</td>
+              <td>{{ report.description }}</td>
+              <td>{{ new Date(report.createdAt).toLocaleDateString('vi-VN') }}</td>
+              <td>
+                <button class="btn btn-primary btn-sm" @click="handleResolveReport(report.id)">Đã Xử Lý</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Xem Góp Ý -->
     <div v-else-if="currentTab === 'feedback'" class="tab-content">
       <h3>Danh sách Góp Ý</h3>
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Hữu ích?</th>
-            <th>Tính năng mong muốn</th>
-            <th>Sân mong muốn</th>
-            <th>Ngày gửi</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="feedbacks.length === 0">
-            <td colspan="5" class="text-center">Chưa có góp ý nào.</td>
-          </tr>
-          <tr v-for="fb in feedbacks" :key="fb.id">
-            <td>{{ fb.id }}</td>
-            <td>{{ fb.isHelpful ? 'Có 👍' : 'Không 👎' }}</td>
-            <td>{{ fb.missingFeature || '-' }}</td>
-            <td>{{ fb.wantedCourt || '-' }}</td>
-            <td>{{ new Date(fb.createdAt).toLocaleDateString('vi-VN') }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Hữu ích?</th>
+              <th>Tính năng mong muốn</th>
+              <th>Sân mong muốn</th>
+              <th>Ngày gửi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="feedbacks.length === 0">
+              <td colspan="5" class="text-center">Chưa có góp ý nào.</td>
+            </tr>
+            <tr v-for="fb in feedbacks" :key="fb.id">
+              <td>{{ fb.id }}</td>
+              <td>{{ fb.isHelpful ? 'Có 👍' : 'Không 👎' }}</td>
+              <td>{{ fb.missingFeature || '-' }}</td>
+              <td>{{ fb.wantedCourt || '-' }}</td>
+              <td>{{ new Date(fb.createdAt).toLocaleDateString('vi-VN') }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Duyệt Nạp Tiền -->
     <div v-else-if="currentTab === 'transactions'" class="tab-content">
       <h3>Danh sách Nạp Tiền (Chờ duyệt)</h3>
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Tên đăng nhập</th>
-            <th>Số tiền</th>
-            <th>Lượt cộng thêm</th>
-            <th>Ngày gửi</th>
-            <th>Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="transactions.length === 0">
-            <td colspan="6" class="text-center">Không có yêu cầu nạp tiền nào.</td>
-          </tr>
-          <tr v-for="trx in transactions" :key="trx.id">
-            <td>{{ trx.id }}</td>
-            <td><strong>{{ trx.username }}</strong></td>
-            <td class="text-primary fw-bold">{{ formatCurrency(trx.amount) }}</td>
-            <td>+{{ trx.creditsAdded }} lượt</td>
-            <td>{{ new Date(trx.createdAt).toLocaleString('vi-VN') }}</td>
-            <td>
-              <button class="btn btn-success btn-sm" @click="handleUpdateTransaction(trx.id, 1)">Duyệt</button>
-              <button class="btn btn-danger btn-sm" style="margin-left:4px" @click="handleUpdateTransaction(trx.id, 2)">Từ chối</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tên đăng nhập</th>
+              <th>Số tiền</th>
+              <th>Lượt cộng thêm</th>
+              <th>Ngày gửi</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="transactions.length === 0">
+              <td colspan="6" class="text-center">Không có yêu cầu nạp tiền nào.</td>
+            </tr>
+            <tr v-for="trx in transactions" :key="trx.id">
+              <td>{{ trx.id }}</td>
+              <td><strong>{{ trx.username }}</strong></td>
+              <td class="text-primary fw-bold">{{ formatCurrency(trx.amount) }}</td>
+              <td>+{{ trx.creditsAdded }} lượt</td>
+              <td>{{ new Date(trx.createdAt).toLocaleString('vi-VN') }}</td>
+              <td>
+                <button class="btn btn-success btn-sm" @click="handleUpdateTransaction(trx.id, 1)">Duyệt</button>
+                <button class="btn btn-danger btn-sm" style="margin-left:4px" @click="handleUpdateTransaction(trx.id, 2)">Từ chối</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Modal Form Sân -->
@@ -672,4 +686,18 @@ const getMatchStatusText = (status) => {
   border: none;
 }
 .text-success { color: #10b981; font-weight: 600; }
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 768px) {
+  .admin-tabs {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .stat-panel[style] {
+    grid-template-columns: 1fr !important;
+  }
+}
 </style>

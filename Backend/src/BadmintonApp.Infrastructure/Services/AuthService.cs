@@ -1,13 +1,16 @@
 using BadmintonApp.Application.DTOs.Auth;
 using BadmintonApp.Application.Interfaces;
+using BadmintonApp.Application.DTOs.Users;
 using BadmintonApp.Domain.Entities;
 using BadmintonApp.Infrastructure.Data;
+using BadmintonApp.Application.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Google.Apis.Auth;
 
 namespace BadmintonApp.Infrastructure.Services;
 
@@ -45,6 +48,11 @@ public class AuthService : IAuthService
             throw new ArgumentException("Tên đăng nhập đã tồn tại");
         }
 
+        if (ProfanityFilter.ContainsProfanity(registerDto.FullName) || ProfanityFilter.ContainsProfanity(registerDto.Username))
+        {
+            throw new ArgumentException("Tên đăng nhập hoặc Họ tên chứa từ ngữ không phù hợp.");
+        }
+
         var user = new User
         {
             Username = registerDto.Username,
@@ -78,6 +86,11 @@ public class AuthService : IAuthService
         var user = await _context.Users.FindAsync(userId);
         if (user == null)
             throw new KeyNotFoundException("Không tìm thấy người dùng");
+
+        if (ProfanityFilter.ContainsProfanity(dto.FullName))
+        {
+            throw new ArgumentException("Họ tên chứa từ ngữ không phù hợp.");
+        }
 
         user.FullName = dto.FullName;
         user.Phone = dto.Phone;
@@ -120,7 +133,7 @@ public class AuthService : IAuthService
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);
-
+        
         return new AuthResponseDto
         {
             Token = tokenHandler.WriteToken(token),
@@ -131,5 +144,49 @@ public class AuthService : IAuthService
             Role = user.Role,
             Credits = user.Credits
         };
+    }
+
+    public async Task<AuthResponseDto> GoogleLoginAsync(GoogleLoginDto dto)
+    {
+        try
+        {
+            var settings = new GoogleJsonWebSignature.ValidationSettings()
+            {
+                Audience = new List<string>() { "1008910270642-flh9lb3sb1241tpvs9ssj495uhvhhmgb.apps.googleusercontent.com" }
+            };
+            
+            var payload = await GoogleJsonWebSignature.ValidateAsync(dto.Token, settings);
+            if (payload == null)
+            {
+                throw new ArgumentException("Token không hợp lệ.");
+            }
+            
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == payload.Email);
+            
+            if (user == null)
+            {
+                user = new User
+                {
+                    Username = payload.Email,
+                    FullName = payload.Name,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString()), 
+                    Credits = 10,
+                    Role = "User"
+                };
+                
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+            }
+            else if (user.IsLocked)
+            {
+                throw new UnauthorizedAccessException("Tài khoản đã bị khóa");
+            }
+            
+            return GenerateAuthResponse(user);
+        }
+        catch (InvalidJwtException)
+        {
+            throw new ArgumentException("Token Google không hợp lệ hoặc đã hết hạn.");
+        }
     }
 }

@@ -82,7 +82,15 @@ using (var scope = app.Services.CreateScope())
         context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE Name = N'IsLocked' AND Object_ID = Object_ID(N'Users')) BEGIN ALTER TABLE Users ADD IsLocked bit NOT NULL DEFAULT 0; END");
 
         // Add Credits column if not exists
-        context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE Name = N'Credits' AND Object_ID = Object_ID(N'Users')) BEGIN ALTER TABLE Users ADD Credits int NOT NULL DEFAULT 3; END");
+        context.Database.ExecuteSqlRaw(@"
+            IF NOT EXISTS(SELECT 1 FROM sys.columns 
+                          WHERE Name = N'Credits'
+                          AND Object_ID = Object_ID(N'dbo.Users'))
+            BEGIN
+                ALTER TABLE [Users] ADD [Credits] int NOT NULL DEFAULT 10;
+                UPDATE [Users] SET [Credits] = 10;
+            END
+        ");
 
         // Create Transactions table if not exists
         context.Database.ExecuteSqlRaw(@"
