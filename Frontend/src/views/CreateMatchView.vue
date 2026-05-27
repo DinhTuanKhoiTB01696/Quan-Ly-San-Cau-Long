@@ -67,7 +67,12 @@
           {{ matchStore.error }}
         </div>
 
-        <button type="submit" class="btn btn-primary w-100" :disabled="matchStore.loading">
+        <div v-if="authStore.credits <= 0" class="error-msg alert-warning" style="margin-top: 10px;">
+          <p>Bạn đã hết lượt đăng kèo. Vui lòng nạp thêm để tiếp tục sử dụng dịch vụ.</p>
+          <router-link to="/topup" class="btn btn-outline w-100" style="margin-top: 10px;">Nạp Lượt Đăng</router-link>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100" :disabled="matchStore.loading || authStore.credits <= 0" style="margin-top: 16px;">
           {{ matchStore.loading ? 'Đang tạo...' : 'Xác nhận Đăng Kèo' }}
         </button>
       </form>
@@ -80,11 +85,13 @@ import { reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCourtStore } from '@/stores/courts'
 import { useMatchStore } from '@/stores/matches'
+import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
 
 const router = useRouter()
 const courtStore = useCourtStore()
 const matchStore = useMatchStore()
+const authStore = useAuthStore()
 const toast = useToast()
 
 const today = computed(() => {
@@ -126,6 +133,7 @@ const handleSubmit = async () => {
   const success = await matchStore.createMatch(payload)
   if (success) {
     toast.success('Tạo kèo thành công!')
+    await authStore.fetchMe() // Cập nhật lại số lượt đăng
     router.push('/my-matches')
   } else {
     toast.error(matchStore.error || 'Tạo kèo thất bại')
@@ -176,6 +184,13 @@ const formatCurrency = (val) => {
   font-size: 13px;
   margin-bottom: 16px;
   text-align: center;
+}
+.alert-warning {
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  color: #b45309;
+  padding: 12px;
+  border-radius: 8px;
 }
 @media (max-width: 480px) {
   .form-row {

@@ -30,6 +30,11 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Tài khoản hoặc mật khẩu không chính xác");
         }
 
+        if (user.IsLocked)
+        {
+            throw new UnauthorizedAccessException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.");
+        }
+
         return GenerateAuthResponse(user);
     }
 
@@ -68,6 +73,29 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
     }
 
+    public async Task<AuthResponseDto> UpdateProfileAsync(int userId, UpdateProfileDto dto)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+            throw new KeyNotFoundException("Không tìm thấy người dùng");
+
+        user.FullName = dto.FullName;
+        user.Phone = dto.Phone;
+
+        await _context.SaveChangesAsync();
+
+        return GenerateAuthResponse(user);
+    }
+
+    public async Task<AuthResponseDto> GetMeAsync(int userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+            throw new KeyNotFoundException("Không tìm thấy người dùng");
+
+        return GenerateAuthResponse(user);
+    }
+
     private AuthResponseDto GenerateAuthResponse(User user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -78,6 +106,7 @@ public class AuthService : IAuthService
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
             new Claim("FullName", user.FullName),
+            new Claim("Phone", user.Phone ?? ""),
             new Claim(ClaimTypes.Role, user.Role)
         };
 
@@ -98,7 +127,9 @@ public class AuthService : IAuthService
             UserId = user.Id,
             Username = user.Username,
             FullName = user.FullName,
-            Role = user.Role
+            Phone = user.Phone,
+            Role = user.Role,
+            Credits = user.Credits
         };
     }
 }

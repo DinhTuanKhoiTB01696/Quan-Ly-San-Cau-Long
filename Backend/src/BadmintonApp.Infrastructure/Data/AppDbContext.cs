@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Report> Reports => Set<Report>();
     public DbSet<Feedback> Feedbacks => Set<Feedback>();
     public DbSet<MatchParticipant> MatchParticipants => Set<MatchParticipant>();
+    public DbSet<Transaction> Transactions => Set<Transaction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

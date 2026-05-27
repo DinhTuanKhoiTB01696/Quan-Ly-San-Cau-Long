@@ -14,6 +14,14 @@ public class DashboardStatsDto
     public int ExpiredMatches { get; set; }
     
     public int PendingReports { get; set; }
+    
+    public List<MatchCountByDateDto> MatchCountsByDate { get; set; } = new();
+}
+
+public class MatchCountByDateDto
+{
+    public string Date { get; set; } = string.Empty;
+    public int Count { get; set; }
 }
 
 public class TopCourtDto

@@ -33,9 +33,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICourtService, CourtService>();
 builder.Services.AddScoped<IMatchService, MatchService>();
+builder.Services.AddScoped<IStatsService, StatsService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
-builder.Services.AddScoped<IStatsService, StatsService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 // --- JWT Authentication ---
 builder.Services.AddAuthentication(options =>
@@ -71,8 +73,30 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<AppDbContext>();
     try
     {
+        context.Database.EnsureCreated();
+        
+        // Add IsLocked column if not exists
+        context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE Name = N'IsLocked' AND Object_ID = Object_ID(N'Users')) BEGIN ALTER TABLE Users ADD IsLocked bit NOT NULL DEFAULT 0; END");
+
+        // Add Credits column if not exists
+        context.Database.ExecuteSqlRaw("IF NOT EXISTS (SELECT * FROM sys.columns WHERE Name = N'Credits' AND Object_ID = Object_ID(N'Users')) BEGIN ALTER TABLE Users ADD Credits int NOT NULL DEFAULT 3; END");
+
+        // Create Transactions table if not exists
+        context.Database.ExecuteSqlRaw(@"
+            IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Transactions' and xtype='U')
+            CREATE TABLE Transactions (
+                Id INT IDENTITY(1,1) PRIMARY KEY,
+                UserId INT NOT NULL,
+                Amount DECIMAL(18,2) NOT NULL,
+                CreditsAdded INT NOT NULL,
+                Status INT NOT NULL DEFAULT 0,
+                CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+                CONSTRAINT FK_Transactions_Users FOREIGN KEY (UserId) REFERENCES Users(Id)
+            );");
+
         await BadmintonApp.Infrastructure.Data.DbSeeder.SeedAsync(services);
     }
     catch (Exception ex)

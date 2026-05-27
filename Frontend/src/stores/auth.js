@@ -6,7 +6,8 @@ export const useAuthStore = defineStore('auth', {
     user: JSON.parse(localStorage.getItem('user')) || null,
     token: localStorage.getItem('token') || null,
     loading: false,
-    error: null
+    error: null,
+    credits: 0
   }),
 
   getters: {
@@ -64,6 +65,25 @@ export const useAuthStore = defineStore('auth', {
       this.token = null
       localStorage.removeItem('token')
       localStorage.removeItem('user')
+    },
+    async fetchMe() {
+      if (!this.token) return
+      try {
+        const { data } = await api.get('/api/Auth/me')
+        this.token = data.token
+        this.user = {
+          id: data.userId,
+          username: data.username,
+          fullName: data.fullName,
+          phone: data.phone,
+          role: data.role
+        }
+        this.credits = data.credits || 0
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('user', JSON.stringify(this.user))
+      } catch (err) {
+        console.error('Failed to fetch me', err)
+      }
     }
   }
 })

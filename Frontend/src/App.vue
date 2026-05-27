@@ -19,7 +19,9 @@ const authStore = useAuthStore()
 // If there's an existing token/user in localStorage, it's already loaded by Pinia state function.
 // We could optionally verify the token with the backend here.
 onMounted(() => {
-  // console.log('App loaded. Auth:', authStore.isAuthenticated)
+  if (authStore.isAuthenticated) {
+    authStore.fetchMe()
+  }
 })
 </script>
 

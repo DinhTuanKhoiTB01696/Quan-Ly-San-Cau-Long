@@ -5,6 +5,7 @@
       
       <div class="nav-links">
         <router-link to="/courts" class="nav-link">Danh sách sân</router-link>
+        <router-link to="/feedback" class="nav-link">Góp ý</router-link>
         <template v-if="authStore.isAuthenticated">
           <router-link to="/profile" class="nav-link user-greeting" style="font-weight:bold; color:var(--text-primary)">
             Chào, {{ authStore.user?.fullName }}

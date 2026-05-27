@@ -40,15 +40,15 @@ public class ParticipantDto
 
 public class CreateMatchDto
 {
-    [Required]
+    [Required(ErrorMessage = "Vui lòng chọn Sân cầu lông")]
     public int CourtId { get; set; }
-    [Required]
+    [Required(ErrorMessage = "Vui lòng chọn Ngày đánh")]
     public DateTime Date { get; set; }
-    [Required]
+    [Required(ErrorMessage = "Vui lòng chọn Giờ bắt đầu")]
     public TimeSpan TimeStart { get; set; }
-    [Required]
+    [Required(ErrorMessage = "Vui lòng chọn Giờ kết thúc")]
     public TimeSpan TimeEnd { get; set; }
-    [Required]
+    [Required(ErrorMessage = "Vui lòng nhập số Zalo liên hệ")]
     public string Zalo { get; set; } = string.Empty;
     
     public int SlotsTotal { get; set; }

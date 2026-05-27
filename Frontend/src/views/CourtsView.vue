@@ -4,7 +4,14 @@
       <h2>Khám phá Sân Cầu Lông</h2>
       
       <!-- Lọc khu vực -->
-      <div class="filter-controls">
+      <div class="filter-controls" style="display: flex; gap: 12px;">
+        <input 
+          type="text" 
+          v-model="searchQuery" 
+          placeholder="Tìm tên sân..." 
+          class="form-control" 
+          style="width: 250px;"
+        />
         <select v-model="selectedArea" @change="fetchData" class="form-control" style="width: 200px;">
           <option :value="null">Tất cả khu vực</option>
           <option value="1">Tân Mai</option>
@@ -20,15 +27,15 @@
       <div class="spinner" style="width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
     </div>
 
-    <div v-else-if="courtStore.courts.length === 0" class="empty-state card text-center py-5">
+    <div v-else-if="filteredCourts.length === 0" class="empty-state card text-center py-5">
       <div style="font-size: 48px; margin-bottom: 16px;">🏸</div>
       <h3>Không tìm thấy sân</h3>
-      <p class="text-secondary">Chưa có sân nào ở khu vực này được cập nhật trên hệ thống.</p>
+      <p class="text-secondary">Không có sân nào phù hợp với tìm kiếm của bạn.</p>
     </div>
 
     <div v-else class="courts-grid">
       <div 
-        v-for="court in courtStore.courts" 
+        v-for="court in filteredCourts" 
         :key="court.id" 
         class="card court-card"
         @click="goToDetail(court.id)"
@@ -74,13 +81,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCourtStore } from '@/stores/courts'
 
 const router = useRouter()
 const courtStore = useCourtStore()
 const selectedArea = ref(null)
+const searchQuery = ref('')
+
+const filteredCourts = computed(() => {
+  if (!searchQuery.value) return courtStore.courts;
+  const q = searchQuery.value.toLowerCase();
+  return courtStore.courts.filter(c => c.name.toLowerCase().includes(q) || c.address.toLowerCase().includes(q));
+})
 
 const fetchData = () => {
   courtStore.fetchCourts(selectedArea.value)

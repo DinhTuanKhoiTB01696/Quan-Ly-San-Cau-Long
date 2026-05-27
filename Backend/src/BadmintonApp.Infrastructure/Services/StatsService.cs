@@ -44,6 +44,23 @@ public class StatsService : IStatsService
             .Take(5)
             .ToListAsync();
 
+        // Kèo theo ngày (7 ngày gần nhất)
+        var sevenDaysAgo = DateTime.UtcNow.AddDays(-7).Date;
+        var recentMatches = await _context.Matches
+            .Where(m => m.Date >= sevenDaysAgo)
+            .GroupBy(m => m.Date.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToListAsync();
+            
+        var matchCountsByDate = Enumerable.Range(0, 7)
+            .Select(i => DateTime.UtcNow.Date.AddDays(-6 + i))
+            .Select(d => new MatchCountByDateDto
+            {
+                Date = d.ToString("dd/MM"),
+                Count = recentMatches.FirstOrDefault(r => r.Date == d)?.Count ?? 0
+            })
+            .ToList();
+
         return new DashboardStatsDto
         {
             TotalUsers = totalUsers,
@@ -54,7 +71,8 @@ public class StatsService : IStatsService
             FullMatches = fullMatches,
             ExpiredMatches = expiredMatches,
             PendingReports = pendingReports,
-            TopCourts = topCourts
+            TopCourts = topCourts,
+            MatchCountsByDate = matchCountsByDate
         };
     }
 }

@@ -19,12 +19,12 @@ public class MatchesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] Area? area, [FromQuery] Level? level, [FromQuery] MatchStatus? status)
+    public async Task<IActionResult> GetAll([FromQuery] Area? area, [FromQuery] Level? level, [FromQuery] MatchStatus? status, [FromQuery] DateTime? date)
     {
         // Kích hoạt tính năng auto-expire mỗi khi có người get danh sách
         await _matchService.AutoExpireMatchesAsync();
 
-        var matches = await _matchService.GetAllAsync(area, level, status);
+        var matches = await _matchService.GetAllAsync(area, level, status, date);
         return Ok(matches);
     }
 
@@ -44,6 +44,17 @@ public class MatchesController : ControllerBase
         if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
 
         var matches = await _matchService.GetByHostAsync(userId);
+        return Ok(matches);
+    }
+
+    [Authorize]
+    [HttpGet("joined-matches")]
+    public async Task<IActionResult> GetJoinedMatches()
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+        var matches = await _matchService.GetJoinedMatchesAsync(userId);
         return Ok(matches);
     }
 

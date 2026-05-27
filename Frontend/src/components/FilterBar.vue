@@ -31,6 +31,11 @@
         <option value="2">Đã đủ người</option>
       </select>
     </div>
+
+    <div class="filter-group">
+      <label>Ngày</label>
+      <input type="date" v-model="filters.date" @change="emitFilter" />
+    </div>
   </div>
 </template>
 
@@ -42,7 +47,8 @@ const emit = defineEmits(['filter-changed'])
 const filters = reactive({
   area: null,
   level: null,
-  status: 1 // Mặc định hiển thị đang tuyển (Open = 1)
+  status: 1, // Mặc định hiển thị đang tuyển (Open = 1)
+  date: null
 })
 
 const emitFilter = () => {
@@ -67,7 +73,11 @@ const emitFilter = () => {
   font-weight: 500;
   color: var(--text-secondary);
 }
-select {
+select, input[type="date"] {
   padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
 }
 </style>

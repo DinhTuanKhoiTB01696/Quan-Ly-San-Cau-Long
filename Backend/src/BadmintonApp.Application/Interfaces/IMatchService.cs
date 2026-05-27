@@ -5,8 +5,9 @@ namespace BadmintonApp.Application.Interfaces;
 
 public interface IMatchService
 {
-    Task<IEnumerable<MatchDto>> GetAllAsync(Area? area, Level? level, MatchStatus? status);
+    Task<IEnumerable<MatchDto>> GetAllAsync(Area? area, Level? level, MatchStatus? status, DateTime? date);
     Task<IEnumerable<MatchDto>> GetByHostAsync(int hostUserId);
+    Task<IEnumerable<MatchDto>> GetJoinedMatchesAsync(int userId);
     Task<MatchDto?> GetByIdAsync(int id);
     Task<MatchDto> CreateAsync(int hostUserId, string hostName, CreateMatchDto createDto);
     Task UpdateStatusAsync(int id, int userId, MatchStatus status);

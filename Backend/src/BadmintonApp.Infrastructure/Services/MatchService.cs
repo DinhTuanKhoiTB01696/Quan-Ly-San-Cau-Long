@@ -17,7 +17,7 @@ public class MatchService : IMatchService
         _context = context;
     }
 
-    public async Task<IEnumerable<MatchDto>> GetAllAsync(Area? area, Level? level, MatchStatus? status)
+    public async Task<IEnumerable<MatchDto>> GetAllAsync(Area? area, Level? level, MatchStatus? status, DateTime? date)
     {
         var query = _context.Matches.Include(m => m.Court).Include(m => m.Participants).AsQueryable();
 
@@ -29,6 +29,9 @@ public class MatchService : IMatchService
             
         if (status.HasValue)
             query = query.Where(m => m.Status == status.Value);
+
+        if (date.HasValue)
+            query = query.Where(m => m.Date.Date == date.Value.Date);
 
         var matches = await query
             .OrderBy(m => m.Status) // Open (1), Full (2), Expired (3)
@@ -45,6 +48,18 @@ public class MatchService : IMatchService
             .Include(m => m.Court)
             .Include(m => m.Participants)
             .Where(m => m.HostUserId == hostUserId)
+            .OrderByDescending(m => m.Date)
+            .ToListAsync();
+
+        return matches.Select(MapToDto);
+    }
+
+    public async Task<IEnumerable<MatchDto>> GetJoinedMatchesAsync(int userId)
+    {
+        var matches = await _context.Matches
+            .Include(m => m.Court)
+            .Include(m => m.Participants)
+            .Where(m => m.Participants.Any(p => p.UserId == userId))
             .OrderByDescending(m => m.Date)
             .ToListAsync();
 
@@ -77,6 +92,26 @@ public class MatchService : IMatchService
         {
             throw new InvalidOperationException("Đã có kèo tại sân này trong khoảng thời gian trên.");
         }
+
+        if (createDto.TimeStart >= createDto.TimeEnd)
+        {
+            throw new InvalidOperationException("Giờ bắt đầu phải nhỏ hơn giờ kết thúc");
+        }
+
+        if (createDto.SlotsTotal <= 0)
+        {
+            throw new InvalidOperationException("Tổng số người phải lớn hơn 0");
+        }
+
+        var user = await _context.Users.FindAsync(hostUserId) 
+            ?? throw new InvalidOperationException("Không tìm thấy thông tin tài khoản");
+
+        if (user.Credits <= 0)
+        {
+            throw new InvalidOperationException("Bạn đã hết lượt đăng kèo. Vui lòng nạp thêm để tiếp tục sử dụng dịch vụ.");
+        }
+
+        user.Credits -= 1;
 
         var match = new Match
         {

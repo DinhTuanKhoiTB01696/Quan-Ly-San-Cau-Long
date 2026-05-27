@@ -18,6 +18,7 @@ export const useMatchStore = defineStore('matches', {
         if (filters.area !== undefined && filters.area !== null) params.append('area', filters.area)
         if (filters.level !== undefined && filters.level !== null) params.append('level', filters.level)
         if (filters.status !== undefined && filters.status !== null) params.append('status', filters.status)
+        if (filters.date) params.append('date', filters.date)
 
         const response = await api.get(`/matches?${params.toString()}`)
         this.matches = response.data

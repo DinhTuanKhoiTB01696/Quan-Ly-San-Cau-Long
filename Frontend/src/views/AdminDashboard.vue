@@ -6,8 +6,12 @@
 
     <div class="admin-tabs">
       <button :class="{ active: currentTab === 'dashboard' }" @click="currentTab = 'dashboard'">Thống Kê</button>
+      <button :class="{ active: currentTab === 'users' }" @click="currentTab = 'users'">Người Dùng</button>
+      <button :class="{ active: currentTab === 'matches' }" @click="currentTab = 'matches'">Quản lý Kèo</button>
       <button :class="{ active: currentTab === 'courts' }" @click="currentTab = 'courts'">Quản lý Sân</button>
       <button :class="{ active: currentTab === 'reports' }" @click="currentTab = 'reports'">Báo Cáo</button>
+      <button :class="{ active: currentTab === 'feedback' }" @click="currentTab = 'feedback'">Góp Ý</button>
+      <button :class="{ active: currentTab === 'transactions' }" @click="currentTab = 'transactions'">Duyệt Nạp Tiền</button>
     </div>
 
     <div v-if="loading" class="text-center p-4">Đang tải dữ liệu...</div>
@@ -62,18 +66,19 @@
           </table>
         </div>
         
-        <div class="stat-panel full-width">
-          <h3>Tỷ lệ lấp đầy kèo</h3>
-          <div class="ratio-bar">
-             <div class="ratio-item open" :style="{ flex: stats.openMatches || 1 }">
-                Đang mở ({{ stats.openMatches }})
-             </div>
-             <div class="ratio-item full" :style="{ flex: stats.fullMatches || 1 }">
-                Đã full ({{ stats.fullMatches }})
-             </div>
-             <div class="ratio-item expired" :style="{ flex: stats.expiredMatches || 1 }">
-                Hết hạn ({{ stats.expiredMatches }})
-             </div>
+        <!-- Biểu đồ -->
+        <div class="stat-panel full-width" style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+          <div>
+            <h3>Số lượng kèo 7 ngày qua</h3>
+            <div style="height: 300px;">
+              <Bar v-if="barChartData" :data="barChartData" :options="chartOptions" />
+            </div>
+          </div>
+          <div>
+            <h3>Tỷ lệ trạng thái kèo</h3>
+            <div style="height: 300px;">
+              <Pie v-if="pieChartData" :data="pieChartData" :options="chartOptions" />
+            </div>
           </div>
         </div>
       </div>
@@ -113,6 +118,77 @@
       </table>
     </div>
 
+    <!-- Quản Lý Người Dùng -->
+    <div v-else-if="currentTab === 'users'" class="tab-content">
+      <h3>Danh sách Người Dùng</h3>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tên đăng nhập</th>
+            <th>Họ và Tên</th>
+            <th>SĐT</th>
+            <th>Quyền</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="user in users" :key="user.id">
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.fullName }}</td>
+            <td>{{ user.phone || 'N/A' }}</td>
+            <td>{{ user.role }}</td>
+            <td>
+              <span :class="user.isLocked ? 'text-danger' : 'text-success'">
+                {{ user.isLocked ? 'Bị Khóa' : 'Hoạt động' }}
+              </span>
+            </td>
+            <td>
+              <button 
+                v-if="user.role !== 'Admin'"
+                class="btn btn-sm" 
+                :class="user.isLocked ? 'btn-primary' : 'btn-danger'" 
+                @click="handleToggleLock(user.id)"
+              >
+                {{ user.isLocked ? 'Mở Khóa' : 'Khóa' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Quản Lý Kèo -->
+    <div v-else-if="currentTab === 'matches'" class="tab-content">
+      <h3>Tất Cả Các Kèo</h3>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Host</th>
+            <th>Sân</th>
+            <th>Ngày & Giờ</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="match in matches" :key="match.id">
+            <td>{{ match.id }}</td>
+            <td>{{ match.hostName }}</td>
+            <td>{{ match.courtName }}</td>
+            <td>{{ new Date(match.date).toLocaleDateString('vi-VN') }} {{ match.time }}</td>
+            <td>{{ getMatchStatusText(match.status) }}</td>
+            <td>
+              <button class="btn btn-danger btn-sm" @click="handleDeleteMatch(match.id)">Xóa</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <!-- Quản Lý Báo Cáo -->
     <div v-else-if="currentTab === 'reports'" class="tab-content">
       <h3>Danh sách Báo Cáo Chờ Xử Lý</h3>
@@ -145,6 +221,67 @@
       </table>
     </div>
 
+    <!-- Xem Góp Ý -->
+    <div v-else-if="currentTab === 'feedback'" class="tab-content">
+      <h3>Danh sách Góp Ý</h3>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Hữu ích?</th>
+            <th>Tính năng mong muốn</th>
+            <th>Sân mong muốn</th>
+            <th>Ngày gửi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="feedbacks.length === 0">
+            <td colspan="5" class="text-center">Chưa có góp ý nào.</td>
+          </tr>
+          <tr v-for="fb in feedbacks" :key="fb.id">
+            <td>{{ fb.id }}</td>
+            <td>{{ fb.isHelpful ? 'Có 👍' : 'Không 👎' }}</td>
+            <td>{{ fb.missingFeature || '-' }}</td>
+            <td>{{ fb.wantedCourt || '-' }}</td>
+            <td>{{ new Date(fb.createdAt).toLocaleDateString('vi-VN') }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Duyệt Nạp Tiền -->
+    <div v-else-if="currentTab === 'transactions'" class="tab-content">
+      <h3>Danh sách Nạp Tiền (Chờ duyệt)</h3>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tên đăng nhập</th>
+            <th>Số tiền</th>
+            <th>Lượt cộng thêm</th>
+            <th>Ngày gửi</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="transactions.length === 0">
+            <td colspan="6" class="text-center">Không có yêu cầu nạp tiền nào.</td>
+          </tr>
+          <tr v-for="trx in transactions" :key="trx.id">
+            <td>{{ trx.id }}</td>
+            <td><strong>{{ trx.username }}</strong></td>
+            <td class="text-primary fw-bold">{{ formatCurrency(trx.amount) }}</td>
+            <td>+{{ trx.creditsAdded }} lượt</td>
+            <td>{{ new Date(trx.createdAt).toLocaleString('vi-VN') }}</td>
+            <td>
+              <button class="btn btn-success btn-sm" @click="handleUpdateTransaction(trx.id, 1)">Duyệt</button>
+              <button class="btn btn-danger btn-sm" style="margin-left:4px" @click="handleUpdateTransaction(trx.id, 2)">Từ chối</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <!-- Modal Form Sân -->
     <CourtModal 
       :show="showCourtModal"
@@ -160,13 +297,25 @@ import { ref, onMounted, watch } from 'vue'
 import api from '@/api/axios'
 import CourtModal from '@/components/CourtModal.vue'
 import { useToast } from 'vue-toastification'
+import { Bar, Pie } from 'vue-chartjs'
+import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement } from 'chart.js'
+
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement)
 
 const currentTab = ref('dashboard')
+const users = ref([])
+const matches = ref([])
 const courts = ref([])
 const reports = ref([])
+const feedbacks = ref([])
+const transactions = ref([])
 const stats = ref(null)
 const loading = ref(false)
 const error = ref(null)
+
+const barChartData = ref(null)
+const pieChartData = ref(null)
+const chartOptions = { responsive: true, maintainAspectRatio: false }
 
 const toast = useToast()
 
@@ -178,6 +327,25 @@ const fetchStats = async () => {
   try {
     const res = await api.get('/stats/dashboard')
     stats.value = res.data
+    
+    if (stats.value.matchCountsByDate) {
+      barChartData.value = {
+        labels: stats.value.matchCountsByDate.map(m => m.date),
+        datasets: [{
+          label: 'Số kèo tạo mới',
+          backgroundColor: '#3b82f6',
+          data: stats.value.matchCountsByDate.map(m => m.count)
+        }]
+      }
+    }
+
+    pieChartData.value = {
+      labels: ['Đang mở', 'Đã full', 'Hết hạn'],
+      datasets: [{
+        backgroundColor: ['#3b82f6', '#64748b', '#ef4444'],
+        data: [stats.value.openMatches, stats.value.fullMatches, stats.value.expiredMatches]
+      }]
+    }
   } catch (err) {
     error.value = 'Lỗi tải thống kê'
   } finally {
@@ -209,6 +377,54 @@ const fetchReports = async () => {
   }
 }
 
+const fetchUsers = async () => {
+  loading.value = true
+  try {
+    const res = await api.get('/users')
+    users.value = res.data
+  } catch (err) {
+    error.value = 'Lỗi tải người dùng'
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchMatches = async () => {
+  loading.value = true
+  try {
+    const res = await api.get('/matches')
+    matches.value = res.data
+  } catch (err) {
+    error.value = 'Lỗi tải danh sách kèo'
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchFeedbacks = async () => {
+  loading.value = true
+  try {
+    const res = await api.get('/feedback')
+    feedbacks.value = res.data
+  } catch (err) {
+    error.value = 'Lỗi tải danh sách góp ý'
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchTransactions = async () => {
+  loading.value = true
+  try {
+    const res = await api.get('/Transactions/pending')
+    transactions.value = res.data
+  } catch (err) {
+    error.value = 'Lỗi tải danh sách nạp tiền'
+  } finally {
+    loading.value = false
+  }
+}
+
 onMounted(() => {
   fetchStats()
   fetchCourts()
@@ -216,10 +432,37 @@ onMounted(() => {
 })
 
 watch(currentTab, (newTab) => {
+  if (newTab === 'users' && users.value.length === 0) fetchUsers()
+  if (newTab === 'matches' && matches.value.length === 0) fetchMatches()
   if (newTab === 'courts' && courts.value.length === 0) fetchCourts()
   if (newTab === 'reports' && reports.value.length === 0) fetchReports()
+  if (newTab === 'feedback' && feedbacks.value.length === 0) fetchFeedbacks()
+  if (newTab === 'transactions' && transactions.value.length === 0) fetchTransactions()
   if (newTab === 'dashboard' && !stats.value) fetchStats()
 })
+
+const handleToggleLock = async (id) => {
+  try {
+    await api.put(`/users/${id}/lock`)
+    const user = users.value.find(u => u.id === id)
+    if (user) user.isLocked = !user.isLocked
+    toast.success('Đã thay đổi trạng thái khóa')
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Có lỗi xảy ra')
+  }
+}
+
+const handleDeleteMatch = async (id) => {
+  if (confirm('Bạn chắc chắn muốn xóa kèo này?')) {
+    try {
+      await api.delete(`/matches/${id}`)
+      matches.value = matches.value.filter(m => m.id !== id)
+      toast.success('Đã xóa kèo')
+    } catch {
+      toast.error('Xóa thất bại')
+    }
+  }
+}
 
 const handleDeleteCourt = async (id) => {
   if (confirm('Bạn chắc chắn muốn xóa sân này?')) {
@@ -271,6 +514,19 @@ const handleResolveReport = async (id) => {
   }
 }
 
+const handleUpdateTransaction = async (id, status) => {
+  if (!confirm(status === 1 ? 'Bạn xác nhận duyệt nạp tiền này?' : 'Bạn muốn từ chối yêu cầu này?')) return
+  try {
+    await api.put(`/Transactions/${id}/status`, status, {
+      headers: { 'Content-Type': 'application/json' }
+    })
+    transactions.value = transactions.value.filter(t => t.id !== id)
+    toast.success('Đã cập nhật trạng thái')
+  } catch (err) {
+    toast.error('Cập nhật thất bại')
+  }
+}
+
 // Utils
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)
 
@@ -282,6 +538,11 @@ const areaName = (areaVal) => {
 const reasonText = (reasonVal) => {
   const map = { 1: 'Kèo Ảo', 2: 'Sai Giá', 3: 'Sai Giờ', 4: 'Khác' }
   return map[reasonVal] || 'Khác'
+}
+
+const getMatchStatusText = (status) => {
+  const map = { 1: 'Đang mở', 2: 'Đã full', 3: 'Hết hạn' }
+  return map[status] || 'Không xác định'
 }
 </script>
 
@@ -410,4 +671,5 @@ const reasonText = (reasonVal) => {
   color: white;
   border: none;
 }
+.text-success { color: #10b981; font-weight: 600; }
 </style>
