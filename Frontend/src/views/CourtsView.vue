@@ -52,10 +52,21 @@
           :class="{ 'active-selection': activeCourtId === court.id }"
           @click="selectCourt(court)"
         >
+          <!-- NEW: Court Image Area -->
+          <div class="court-card-banner">
+            <img 
+              :src="court.imageUrl || 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800'" 
+              alt="Hình ảnh sân cầu lông Biên Hòa" 
+              class="court-img-pic"
+              loading="lazy"
+            />
+            <div class="court-featured-banner" v-if="court.isFeatured">✨ Nổi Bật</div>
+            <span class="rating-badge-banner">⭐ {{ court.rating.toFixed(1) }}</span>
+          </div>
+
           <div class="court-card-body">
             <div class="court-badge-row">
               <span class="badge badge-area">{{ areaName(court.area) }}</span>
-              <span class="rating-badge">⭐ {{ court.rating.toFixed(1) }}</span>
             </div>
             
             <h3 class="court-name-title">{{ court.name }}</h3>
@@ -66,7 +77,7 @@
             </p>
             
             <div class="court-amenities">
-              <span class="amenity-tag">Mặt sân {{ court.surface }}</span>
+              <span class="amenity-tag">Mặt {{ court.surface }}</span>
               <span class="amenity-tag">Đèn {{ court.light }}</span>
             </div>
             
@@ -257,14 +268,18 @@ const areaName = (areaVal) => {
 .courts-list-column {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .court-item-card {
   margin-bottom: 0;
-  padding: 20px;
+  padding: 0; /* Changed to 0 for image spacing */
+  overflow: hidden;
   cursor: pointer;
   border-color: rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
 }
 
 .court-item-card:hover, .active-selection {
@@ -273,41 +288,87 @@ const areaName = (areaVal) => {
 }
 
 .active-selection {
-  background: linear-gradient(135deg, rgba(163, 230, 53, 0.08) 0%, rgba(15, 23, 42, 0.8) 100%);
+  background: linear-gradient(135deg, rgba(163, 230, 53, 0.05) 0%, rgba(15, 23, 42, 0.85) 100%);
+}
+
+/* NEW: COURT CARD BANNER (IMAGE) */
+.court-card-banner {
+  width: 100%;
+  height: 180px;
+  position: relative;
+  overflow: hidden;
+}
+
+.court-img-pic {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.court-item-card:hover .court-img-pic {
+  transform: scale(1.05);
+}
+
+.court-featured-banner {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 10px rgba(244, 63, 94, 0.4);
+}
+
+.rating-badge-banner {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #f59e0b;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.court-card-body {
+  padding: var(--spacing-lg);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .court-badge-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .badge-area {
-  background: rgba(148, 163, 184, 0.1);
-  color: var(--text-secondary);
+  background: rgba(163, 230, 53, 0.1);
+  color: var(--primary-color);
   font-size: 11px;
-}
-
-.rating-badge {
-  color: #f59e0b;
-  font-weight: 700;
-  font-size: 13px;
-  background: rgba(245, 158, 11, 0.1);
-  padding: 3px 8px;
-  border-radius: 12px;
+  border: 1px solid rgba(163, 230, 53, 0.15);
 }
 
 .court-name-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .court-addr {
   font-size: 14px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -321,17 +382,17 @@ const areaName = (areaVal) => {
 .court-amenities {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 20px;
+  gap: 6px;
+  margin-bottom: 18px;
 }
 
 .amenity-tag {
-  background: rgba(163, 230, 53, 0.08);
-  color: var(--primary-color);
-  border: 1px solid rgba(163, 230, 53, 0.15);
-  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 3px 8px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
 }
 
@@ -340,7 +401,7 @@ const areaName = (areaVal) => {
   justify-content: space-between;
   align-items: center;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  padding-top: 16px;
+  padding-top: 14px;
   margin-top: auto;
 }
 

@@ -40,7 +40,8 @@ public class CourtService : ICourtService
                 Surface = c.Surface,
                 Rating = c.Rating,
                 Phone = c.Phone,
-                IsFeatured = c.IsFeatured
+                IsFeatured = c.IsFeatured,
+                ImageUrl = c.ImageUrl
             })
             .ToListAsync();
     }
@@ -62,7 +63,8 @@ public class CourtService : ICourtService
             Surface = c.Surface,
             Rating = c.Rating,
             Phone = c.Phone,
-            IsFeatured = c.IsFeatured
+            IsFeatured = c.IsFeatured,
+            ImageUrl = c.ImageUrl
         };
     }
 
@@ -77,7 +79,8 @@ public class CourtService : ICourtService
             Ceiling = createDto.Ceiling,
             Light = createDto.Light,
             Surface = createDto.Surface,
-            Phone = createDto.Phone
+            Phone = createDto.Phone,
+            ImageUrl = createDto.ImageUrl
         };
 
         _context.Courts.Add(court);
@@ -99,6 +102,7 @@ public class CourtService : ICourtService
         court.Light = updateDto.Light;
         court.Surface = updateDto.Surface;
         court.Phone = updateDto.Phone;
+        court.ImageUrl = updateDto.ImageUrl;
 
         await _context.SaveChangesAsync();
     }

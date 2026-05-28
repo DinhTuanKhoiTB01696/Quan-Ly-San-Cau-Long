@@ -12,9 +12,12 @@
     </div>
 
     <!-- Hero Image Area -->
-    <div class="court-hero-banner">
+    <div 
+      class="court-hero-banner"
+      :style="{ backgroundImage: `url(${court.imageUrl || 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1200'})` }"
+    >
       <div class="court-hero-overlay"></div>
-      <div class="court-hero-icon">🏸</div>
+      <div class="court-hero-icon" v-if="!court.imageUrl">🏸</div>
       
       <div v-if="court.isFeatured" class="hero-featured-badge">
         ✨ SÂN NỔI BẬT
@@ -298,7 +301,8 @@ const formatTime = (timeStr) => {
 /* HERO BANNER */
 .court-hero-banner {
   height: 320px;
-  background: linear-gradient(135deg, #1e293b 0%, #0b0f19 100%);
+  background-size: cover;
+  background-position: center;
   border-radius: var(--border-radius);
   margin-bottom: 32px;
   display: flex;
@@ -316,7 +320,7 @@ const formatTime = (timeStr) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(163, 230, 53, 0.08) 0%, transparent 80%);
+  background: linear-gradient(to bottom, rgba(11, 15, 25, 0.3) 0%, rgba(11, 15, 25, 0.85) 100%);
 }
 
 .court-hero-icon {

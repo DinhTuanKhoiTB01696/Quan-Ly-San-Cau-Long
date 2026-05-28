@@ -16,6 +16,7 @@ public class CourtDto
     public double Rating { get; set; }
     public string Phone { get; set; } = string.Empty;
     public bool IsFeatured { get; set; }
+    public string ImageUrl { get; set; } = string.Empty;
 }
 
 public class CourtCreateDto
@@ -31,4 +32,5 @@ public class CourtCreateDto
     public string Light { get; set; } = string.Empty;
     public string Surface { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
+    public string ImageUrl { get; set; } = string.Empty;
 }

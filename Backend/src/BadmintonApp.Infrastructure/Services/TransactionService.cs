@@ -56,14 +56,19 @@ public class TransactionService : ITransactionService
 
     public async Task<TransactionDto> CreateTransactionAsync(int userId, CreateTransactionDto dto)
     {
+        // Tự động hóa 100% duyệt giao dịch nạp tiền để giả lập PayOS webhook trên môi trường test
         var transaction = new Transaction
         {
             UserId = userId,
             Amount = dto.Amount,
             CreditsAdded = dto.CreditsAdded,
-            Status = TransactionStatus.Pending,
+            Status = TransactionStatus.Approved, // Duyệt tự động luôn
             CreatedAt = DateTime.UtcNow
         };
+
+        var user = await _context.Users.FindAsync(userId)
+            ?? throw new InvalidOperationException("User not found");
+        user.Credits += dto.CreditsAdded; // Tự động cộng lượt nạp ngay lập tức
 
         _context.Transactions.Add(transaction);
         await _context.SaveChangesAsync();

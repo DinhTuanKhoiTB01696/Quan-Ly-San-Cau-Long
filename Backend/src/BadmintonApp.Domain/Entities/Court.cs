@@ -15,6 +15,7 @@ public class Court
     public double Rating { get; set; } = 5.0;
     public string Phone { get; set; } = string.Empty;
     public bool IsFeatured { get; set; } = false;
+    public string ImageUrl { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<Match> Matches { get; set; } = new List<Match>();
