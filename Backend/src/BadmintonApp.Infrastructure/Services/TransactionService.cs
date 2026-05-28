@@ -159,21 +159,35 @@ public class TransactionService : ITransactionService
 
     public async Task UpdateTransactionStatusAsync(int transactionId, TransactionStatus status)
     {
-        var transaction = await _context.Transactions.FindAsync(transactionId)
-            ?? throw new KeyNotFoundException("Transaction not found");
-
-        if (transaction.Status != TransactionStatus.Pending)
-            throw new InvalidOperationException("Only pending transactions can be updated");
-
-        transaction.Status = status;
-
-        if (status == TransactionStatus.Approved)
+        using var dbTransaction = await _context.Database.BeginTransactionAsync();
+        try
         {
-            var user = await _context.Users.FindAsync(transaction.UserId)
-                ?? throw new InvalidOperationException("User not found");
-            user.Credits += transaction.CreditsAdded;
-        }
+            var transaction = await _context.Transactions.FindAsync(transactionId)
+                ?? throw new KeyNotFoundException("Transaction not found");
 
-        await _context.SaveChangesAsync();
+            if (transaction.Status != TransactionStatus.Pending)
+                throw new InvalidOperationException("Only pending transactions can be updated");
+
+            transaction.Status = status;
+            _context.Transactions.Update(transaction);
+
+            if (status == TransactionStatus.Approved)
+            {
+                var user = await _context.Users.FindAsync(transaction.UserId)
+                    ?? throw new InvalidOperationException("User not found");
+                
+                user.Credits += transaction.CreditsAdded;
+                user.AvailablePosts += transaction.CreditsAdded;
+                _context.Users.Update(user);
+            }
+
+            await _context.SaveChangesAsync();
+            await dbTransaction.CommitAsync();
+        }
+        catch (Exception)
+        {
+            await dbTransaction.RollbackAsync();
+            throw;
+        }
     }
 }

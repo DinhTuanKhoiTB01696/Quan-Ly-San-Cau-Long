@@ -26,6 +26,7 @@ public class UserService : IUserService
             Role = u.Role,
             IsLocked = u.IsLocked,
             Credits = u.Credits,
+            AvailablePosts = u.AvailablePosts,
             CreatedAt = u.CreatedAt
         });
     }

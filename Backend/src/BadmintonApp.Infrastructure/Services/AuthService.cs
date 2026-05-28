@@ -145,6 +145,7 @@ public class AuthService : IAuthService
             Phone = user.Phone,
             Role = user.Role,
             Credits = user.Credits,
+            AvailablePosts = user.AvailablePosts,
             SkillLevel = user.SkillLevel
         };
     }
@@ -174,6 +175,7 @@ public class AuthService : IAuthService
                     FullName = payload.Name,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString()), 
                     Credits = 10,
+                    AvailablePosts = 10,
                     Role = "User"
                 };
                 

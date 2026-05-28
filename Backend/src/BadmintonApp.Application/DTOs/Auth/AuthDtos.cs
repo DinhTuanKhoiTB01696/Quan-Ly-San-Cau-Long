@@ -46,5 +46,6 @@ public class AuthResponseDto
     public string Phone { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public int Credits { get; set; }
+    public int AvailablePosts { get; set; }
     public string SkillLevel { get; set; } = string.Empty;
 }

@@ -29,7 +29,7 @@
               </span>
               <!-- Show Credits Badge for Normal Users -->
               <router-link v-else to="/topup" class="credits-badge" title="Lượt tạo kèo còn lại" @click="closeMenu">
-                🎟️ {{ authStore.credits }} lượt
+                🎟️ {{ authStore.availablePosts }} lượt
               </router-link>
             </div>
           </div>
@@ -50,8 +50,7 @@
   </nav>
 </template>
 
-<script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 
@@ -72,6 +71,12 @@ const handleLogout = () => {
   authStore.logout()
   router.push('/login')
 }
+
+onMounted(() => {
+  if (authStore.isAuthenticated) {
+    authStore.fetchMe()
+  }
+})
 </script>
 
 <style scoped>

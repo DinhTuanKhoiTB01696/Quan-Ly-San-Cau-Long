@@ -13,6 +13,7 @@ public class User
     public string SkillLevel { get; set; } = "Trung bình"; // Mới chơi, Trung bình, Khá, Tốt
     
     public int Credits { get; set; } = 10;
+    public int AvailablePosts { get; set; } = 0;
 
     public ICollection<MatchParticipant> JoinedMatches { get; set; } = new List<MatchParticipant>();
 }

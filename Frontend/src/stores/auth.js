@@ -7,7 +7,8 @@ export const useAuthStore = defineStore('auth', {
     token: localStorage.getItem('token') || null,
     loading: false,
     error: null,
-    credits: 0
+    credits: 0,
+    availablePosts: localStorage.getItem('user') ? (JSON.parse(localStorage.getItem('user')).availablePosts || 0) : 0
   }),
 
   getters: {
@@ -25,6 +26,7 @@ export const useAuthStore = defineStore('auth', {
         
         this.token = token
         this.user = userData
+        this.availablePosts = userData.availablePosts || 0
         
         localStorage.setItem('token', token)
         localStorage.setItem('user', JSON.stringify(userData))
@@ -47,6 +49,7 @@ export const useAuthStore = defineStore('auth', {
         
         this.token = token
         this.user = user
+        this.availablePosts = user.availablePosts || 0
         
         localStorage.setItem('token', token)
         localStorage.setItem('user', JSON.stringify(user))
@@ -83,9 +86,11 @@ export const useAuthStore = defineStore('auth', {
           fullName: data.fullName,
           phone: data.phone,
           role: data.role,
-          skillLevel: data.skillLevel
+          skillLevel: data.skillLevel,
+          availablePosts: data.availablePosts
         }
         this.credits = data.credits || 0
+        this.availablePosts = data.availablePosts || 0
         localStorage.setItem('token', data.token)
         localStorage.setItem('user', JSON.stringify(this.user))
       } catch (err) {
@@ -98,6 +103,7 @@ export const useAuthStore = defineStore('auth', {
         this.token = res.data.token
         this.user = res.data.user
         this.credits = res.data.user.credits || 0
+        this.availablePosts = res.data.user.availablePosts || 0
         localStorage.setItem('token', this.token)
         localStorage.setItem('user', JSON.stringify(this.user))
       } catch (error) {

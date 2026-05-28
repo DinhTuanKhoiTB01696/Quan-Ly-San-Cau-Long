@@ -116,11 +116,12 @@ public class MatchService : IMatchService
 
         if (!isAdmin)
         {
-            if (user.Credits <= 0)
+            if (user.AvailablePosts <= 0)
             {
                 throw new InvalidOperationException("Bạn đã hết lượt đăng kèo. Vui lòng nạp thêm để tiếp tục sử dụng dịch vụ.");
             }
 
+            user.AvailablePosts -= 1;
             user.Credits -= 1;
         }
 

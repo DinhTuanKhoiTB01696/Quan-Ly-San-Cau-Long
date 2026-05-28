@@ -67,12 +67,12 @@
           {{ matchStore.error }}
         </div>
 
-        <div v-if="!authStore.isAdmin && authStore.credits <= 0" class="error-msg alert-warning" style="margin-top: 10px;">
+        <div v-if="!authStore.isAdmin && authStore.availablePosts <= 0" class="error-msg alert-warning" style="margin-top: 10px;">
           <p>Bạn đã hết lượt đăng kèo. Vui lòng nạp thêm để tiếp tục sử dụng dịch vụ.</p>
           <router-link to="/topup" class="btn btn-outline w-100" style="margin-top: 10px;">Nạp Lượt Đăng</router-link>
         </div>
 
-        <button type="submit" class="btn btn-primary w-100" :disabled="matchStore.loading || (!authStore.isAdmin && authStore.credits <= 0)" style="margin-top: 16px;">
+        <button type="submit" class="btn btn-primary w-100" :disabled="matchStore.loading || (!authStore.isAdmin && authStore.availablePosts <= 0)" style="margin-top: 16px;">
           {{ matchStore.loading ? 'Đang tạo...' : 'Xác nhận Đăng Kèo' }}
         </button>
       </form>

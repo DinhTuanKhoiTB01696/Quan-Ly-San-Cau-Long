@@ -9,5 +9,6 @@ public class UserDto
     public string Role { get; set; } = string.Empty;
     public bool IsLocked { get; set; }
     public int Credits { get; set; }
+    public int AvailablePosts { get; set; }
     public DateTime CreatedAt { get; set; }
 }

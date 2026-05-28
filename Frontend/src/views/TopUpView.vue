@@ -3,7 +3,7 @@
     <div class="page-header">
       <span class="wallet-icon">🎟️</span>
       <h2>Nạp Lượt Đăng Kèo Giao Lưu</h2>
-      <p class="credits-count">Số lượt hiện có: <strong class="text-primary">{{ authStore.credits }} lượt</strong></p>
+      <p class="credits-count">Số lượt hiện có: <strong class="text-primary">{{ authStore.availablePosts }} lượt</strong></p>
     </div>
 
     <!-- PACKAGE SELECT -->
