@@ -112,12 +112,17 @@ public class MatchService : IMatchService
         var user = await _context.Users.FindAsync(hostUserId) 
             ?? throw new InvalidOperationException("Không tìm thấy thông tin tài khoản");
 
-        if (user.Credits <= 0)
-        {
-            throw new InvalidOperationException("Bạn đã hết lượt đăng kèo. Vui lòng nạp thêm để tiếp tục sử dụng dịch vụ.");
-        }
+        bool isAdmin = user.Role == "Admin";
 
-        user.Credits -= 1;
+        if (!isAdmin)
+        {
+            if (user.Credits <= 0)
+            {
+                throw new InvalidOperationException("Bạn đã hết lượt đăng kèo. Vui lòng nạp thêm để tiếp tục sử dụng dịch vụ.");
+            }
+
+            user.Credits -= 1;
+        }
 
         var match = new Match
         {
