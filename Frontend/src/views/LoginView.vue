@@ -25,7 +25,7 @@
         <div class="divider"><span>Hoặc</span></div>
 
         <div class="google-btn-wrapper">
-          <GoogleLogin :callback="handleGoogleCallback" prompt auto-login />
+          <GoogleLogin :callback="handleGoogleCallback" />
         </div>
       </form>
       

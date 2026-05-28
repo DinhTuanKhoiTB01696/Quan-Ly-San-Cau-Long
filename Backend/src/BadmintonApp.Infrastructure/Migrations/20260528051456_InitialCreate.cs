@@ -27,6 +27,7 @@ namespace BadmintonApp.Infrastructure.Migrations
                     Rating = table.Column<double>(type: "float", nullable: false),
                     Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsFeatured = table.Column<bool>(type: "bit", nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>

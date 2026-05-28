@@ -54,21 +54,35 @@ public class TransactionService : ITransactionService
         });
     }
 
+    public async Task<IEnumerable<TransactionDto>> GetAllTransactionsAsync()
+    {
+        var transactions = await _context.Transactions
+            .Include(t => t.User)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+
+        return transactions.Select(t => new TransactionDto
+        {
+            Id = t.Id,
+            UserId = t.UserId,
+            Username = t.User?.Username ?? "Unknown",
+            Amount = t.Amount,
+            CreditsAdded = t.CreditsAdded,
+            Status = t.Status,
+            CreatedAt = t.CreatedAt
+        });
+    }
+
     public async Task<TransactionDto> CreateTransactionAsync(int userId, CreateTransactionDto dto)
     {
-        // Tự động hóa 100% duyệt giao dịch nạp tiền để giả lập PayOS webhook trên môi trường test
         var transaction = new Transaction
         {
             UserId = userId,
             Amount = dto.Amount,
             CreditsAdded = dto.CreditsAdded,
-            Status = TransactionStatus.Approved, // Duyệt tự động luôn
+            Status = TransactionStatus.Pending,
             CreatedAt = DateTime.UtcNow
         };
-
-        var user = await _context.Users.FindAsync(userId)
-            ?? throw new InvalidOperationException("User not found");
-        user.Credits += dto.CreditsAdded; // Tự động cộng lượt nạp ngay lập tức
 
         _context.Transactions.Add(transaction);
         await _context.SaveChangesAsync();

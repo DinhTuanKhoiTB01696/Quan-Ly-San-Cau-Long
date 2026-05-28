@@ -7,6 +7,7 @@ public interface ITransactionService
 {
     Task<IEnumerable<TransactionDto>> GetMyTransactionsAsync(int userId);
     Task<IEnumerable<TransactionDto>> GetPendingTransactionsAsync();
+    Task<IEnumerable<TransactionDto>> GetAllTransactionsAsync();
     Task<TransactionDto> CreateTransactionAsync(int userId, CreateTransactionDto dto);
     Task UpdateTransactionStatusAsync(int transactionId, TransactionStatus status);
 }

@@ -37,6 +37,14 @@ public class TransactionsController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
+    [HttpGet("history")]
+    public async Task<IActionResult> GetHistory()
+    {
+        var result = await _transactionService.GetAllTransactionsAsync();
+        return Ok(result);
+    }
+
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> Create(CreateTransactionDto dto)

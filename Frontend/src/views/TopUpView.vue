@@ -132,29 +132,41 @@ const confirmPayment = async () => {
   if (!selectedPackage.value) return
   scanning.value = true
   
-  // Simulated Bank webhook wait time (2.5 seconds)
-  setTimeout(async () => {
-    submitting.value = true
-    try {
-      // Call API to create transaction (which Backend automatically approves and credits immediately!)
-      await api.post('/api/Transactions', {
-        amount: selectedPackage.value.price,
-        creditsAdded: selectedPackage.value.credits
-      })
-      
-      // Update User profile/credits reactively on the UI Navbar!
-      await authStore.fetchProfile()
-      
-      toast.success(`🎉 Nạp tiền thành công! Bạn đã được tự động cộng +${selectedPackage.value.credits} lượt đăng bài.`)
-      router.push('/')
-    } catch (err) {
-      toast.error('Giao dịch chưa được xác nhận, vui lòng thử lại hoặc liên hệ Hotline.')
-      console.error(err)
-    } finally {
-      submitting.value = false
-      scanning.value = false
-    }
-  }, 2500)
+  try {
+    // 1. Tạo giao dịch Pending lưu vào DB
+    const res = await api.post('/api/Transactions', {
+      amount: selectedPackage.value.price,
+      creditsAdded: selectedPackage.value.credits
+    })
+    const trxId = res.data.id
+    
+    // 2. Chờ 2.5 giây giả lập quét VietQR ngân hàng báo có
+    setTimeout(async () => {
+      submitting.value = true
+      try {
+        // 3. Gọi tiếp API Duyệt giao dịch Approved nhân danh hệ thống tự động
+        await api.put(`/api/Transactions/${trxId}/status`, 1, {
+          headers: { 'Content-Type': 'application/json' }
+        })
+        
+        // 4. Cập nhật lượt của user ngay lập tức trên Navbar
+        await authStore.fetchProfile()
+        
+        toast.success(`🎉 Nạp tiền thành công! Bạn đã được tự động cộng +${selectedPackage.value.credits} lượt đăng bài.`)
+        router.push('/')
+      } catch (err) {
+        toast.error('Có lỗi xảy ra khi tự động duyệt giao dịch.')
+        console.error(err)
+      } finally {
+        submitting.value = false
+        scanning.value = false
+      }
+    }, 2500)
+  } catch (err) {
+    toast.error('Có lỗi xảy ra khi khởi tạo yêu cầu nạp tiền.')
+    console.error(err)
+    scanning.value = false
+  }
 }
 </script>
 

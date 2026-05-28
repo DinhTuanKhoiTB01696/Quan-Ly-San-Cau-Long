@@ -336,11 +336,11 @@
             </div>
           </div>
 
-          <!-- TAB: DUYỆT NẠP TIỀN -->
+          <!-- TAB: DUYỆT & LỊCH SỬ NẠP TIỀN -->
           <div v-else-if="currentTab === 'transactions'" class="tab-content animate-fade card">
-            <h2 class="section-title">Duyệt Yêu Cầu Nạp Tiền Tài Khoản</h2>
+            <h2 class="section-title">Yêu Cầu Nạp Tiền Chờ Duyệt (Pending)</h2>
             
-            <div class="table-responsive">
+            <div class="table-responsive mb-5">
               <table class="admin-table">
                 <thead>
                   <tr>
@@ -354,7 +354,7 @@
                 </thead>
                 <tbody>
                   <tr v-if="transactions.length === 0">
-                    <td colspan="6" class="text-center p-4 text-secondary">Không có yêu cầu nạp tiền nào đang chờ duyệt. 🎉</td>
+                    <td colspan="6" class="text-center p-4 text-secondary">Không có yêu cầu nạp tiền nào đang chờ duyệt. (Đã tự động duyệt xong) 🎉</td>
                   </tr>
                   <tr v-for="trx in transactions" :key="trx.id">
                     <td>#{{ trx.id }}</td>
@@ -367,6 +367,40 @@
                         <button class="btn btn-primary btn-sm btn-success-neon" @click="handleUpdateTransaction(trx.id, 1)">Duyệt</button>
                         <button class="btn btn-danger btn-sm" @click="handleUpdateTransaction(trx.id, 2)">Từ chối</button>
                       </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Lịch sử giao dịch nạp tiền -->
+            <h2 class="section-title mt-5">Lịch Sử Toàn Bộ Giao Dịch Nạp Tiền (History)</h2>
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>ID Giao dịch</th>
+                    <th>Tên Tài Khoản</th>
+                    <th>Số Tiền Nạp</th>
+                    <th>Lượt Cộng Thêm</th>
+                    <th>Ngày Gửi Yêu Cầu</th>
+                    <th style="width: 150px; text-align: center">Trạng Thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="transactionHistory.length === 0">
+                    <td colspan="6" class="text-center p-4 text-secondary">Chưa có giao dịch lịch sử nào trong hệ thống.</td>
+                  </tr>
+                  <tr v-for="trx in transactionHistory" :key="trx.id">
+                    <td>#{{ trx.id }}</td>
+                    <td><strong class="text-white">{{ trx.username }}</strong></td>
+                    <td class="text-primary fw-bold">{{ formatCurrency(trx.amount) }}</td>
+                    <td><span class="badge badge-primary">+{{ trx.creditsAdded }} lượt</span></td>
+                    <td>{{ new Date(trx.createdAt).toLocaleString('vi-VN') }}</td>
+                    <td class="text-center">
+                      <span class="badge" :class="trx.status === 1 ? 'badge-success-neon' : trx.status === 2 ? 'badge-danger' : 'badge-warning'">
+                        {{ trx.status === 1 ? 'Đã duyệt' : trx.status === 2 ? 'Từ chối' : 'Chờ duyệt' }}
+                      </span>
                     </td>
                   </tr>
                 </tbody>
@@ -404,6 +438,7 @@ const courts = ref([])
 const reports = ref([])
 const feedbacks = ref([])
 const transactions = ref([])
+const transactionHistory = ref([])
 const stats = ref(null)
 const loading = ref(false)
 const error = ref(null)
@@ -550,8 +585,12 @@ const fetchFeedbacks = async () => {
 const fetchTransactions = async () => {
   loading.value = true
   try {
-    const res = await api.get('/Transactions/pending')
-    transactions.value = res.data
+    const [pendingRes, historyRes] = await Promise.all([
+      api.get('/Transactions/pending'),
+      api.get('/Transactions/history')
+    ])
+    transactions.value = pendingRes.data
+    transactionHistory.value = historyRes.data
   } catch (err) {
     error.value = 'Lỗi tải danh sách nạp tiền'
   } finally {
@@ -652,8 +691,8 @@ const handleUpdateTransaction = async (id, status) => {
     await api.put(`/Transactions/${id}/status`, status, {
       headers: { 'Content-Type': 'application/json' }
     })
-    transactions.value = transactions.value.filter(t => t.id !== id)
     toast.success('Cập nhật giao dịch thành công')
+    fetchTransactions() // Tự động load lại cả pending và history
   } catch (err) {
     toast.error('Duyệt giao dịch thất bại')
   }
@@ -950,6 +989,18 @@ const getMatchStatusText = (status) => {
 .badge-secondary {
   background: rgba(148, 163, 184, 0.15);
   color: var(--text-secondary);
+}
+
+.badge-success-neon {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.25);
 }
 
 .badge-danger {
