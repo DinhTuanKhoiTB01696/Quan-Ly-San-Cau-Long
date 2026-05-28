@@ -17,7 +17,7 @@
         <div class="pkg-features">
           <p>✔️ Tạo đến {{ pkg.credits }} kèo giao lưu</p>
           <p>✔️ Không giới hạn thời gian sử dụng</p>
-          <p>✔️ Tự động kích hoạt ngay lập tức</p>
+          <p>✔️ Thông báo email trực tiếp tới Admin duyệt ngay</p>
         </div>
         <button class="btn btn-primary w-100 pkg-btn">Chọn gói này</button>
       </div>
@@ -25,32 +25,44 @@
 
     <!-- QR PAYMENT SECTION -->
     <div class="card payment-section animate-fade" v-else>
-      <button class="btn btn-outline btn-sm back-package-btn" @click="selectedPackage = null">
+      <button class="btn btn-outline btn-sm back-package-btn" @click="cancelPayment">
         ← Chọn lại gói nạp
       </button>
       
-      <div class="payment-details mt-3">
-        <h3>Quét Mã VietQR Thanh Toán</h3>
-        <div class="payment-meta-grid">
-          <div class="meta-item">
-            <span class="text-secondary small uppercase">Gói nạp</span>
-            <strong class="text-white">{{ selectedPackage.credits }} lượt đăng kèo</strong>
-          </div>
-          <div class="meta-item">
-            <span class="text-secondary small uppercase">Số tiền thanh toán</span>
-            <strong class="text-primary price-display">{{ formatCurrency(selectedPackage.price) }}</strong>
+      <div class="payment-details mt-3 text-center">
+        <p class="warning-text">Lưu ý: <strong>GIỮ NGUYÊN</strong> nội dung chuyển khoản.</p>
+        
+        <div class="timer-countdown mb-3">
+          <span class="timer-icon">⏳</span>
+          <span class="timer-val">{{ formattedTime }}</span>
+        </div>
+
+        <div class="qr-wrapper mb-4">
+          <div class="qr-container">
+            <img :src="qrCodeUrl" alt="Mã VietQR tự động" class="qr-image" v-if="qrCodeUrl" />
+            <div class="spinner" v-else></div>
           </div>
         </div>
 
-        <div class="qr-container mt-4 mb-4">
-          <img :src="qrCodeUrl" alt="Mã VietQR tự động" class="qr-image" v-if="qrCodeUrl" />
-          <div class="spinner" v-else></div>
+        <!-- Banking Details Box -->
+        <div class="banking-info-box mb-4">
+          <p class="bank-name">MB BANK — 7911235813</p>
+          <p class="account-name">HO KINH DOANH LUYEN NOI</p>
+          <p class="amount-val">Số tiền: <strong>{{ formatCurrency(selectedPackage.price) }}</strong></p>
+          <p class="transfer-code">
+            Nội dung CK: <strong>{{ transactionCode }}</strong>
+            <button class="btn-copy" @click="copyToClipboard(transactionCode)" title="Sao chép nội dung">📋</button>
+          </p>
         </div>
 
-        <!-- Warning info -->
-        <div class="alert-info-box mb-4">
-          <p><strong>Cơ chế tự động hóa:</strong> Tiền nạp sẽ chuyển vào tài khoản VietinBank: <strong>DINH TUAN KHOI</strong>.</p>
-          <p class="text-primary small mt-1">⚠️ <strong>Lưu ý:</strong> Vui lòng quét mã QR trên và giữ nguyên nội dung chuyển khoản để hệ thống tự động cộng lượt ngay lập tức.</p>
+        <div class="owner-email mb-3">
+          <span>khoidttb01696@gmail.com</span>
+        </div>
+
+        <div class="help-link mb-4">
+          <router-link :to="{ name: 'feedback', query: { type: 'Nạp tiền', code: transactionCode } }" class="btn-help">
+            Chuyển rồi mà chưa được duyệt → nhắn gửi ảnh chuyển khoản và email
+          </router-link>
         </div>
         
         <button 
@@ -59,7 +71,7 @@
           :disabled="submitting || scanning"
         >
           <span v-if="scanning" class="btn-spinner"></span>
-          {{ scanning ? 'Đang kiểm tra giao dịch...' : submitting ? 'Đang xử lý...' : 'Tôi đã chuyển khoản thành công' }}
+          {{ scanning ? 'Đang gửi yêu cầu nạp tiền...' : submitting ? 'Đang xử lý...' : 'Tôi đã chuyển khoản thành công' }}
         </button>
       </div>
     </div>
@@ -70,8 +82,8 @@
         <div class="pulse-scan-ring">
           <span class="scan-emoji">🏦</span>
         </div>
-        <h3>Đang quét giao dịch ngân hàng...</h3>
-        <p class="text-secondary">Đang kết nối cổng thanh toán VietQR và kiểm tra biến động số dư tài khoản...</p>
+        <h3>Đang gửi yêu cầu nạp lượt...</h3>
+        <p class="text-secondary">Hệ thống đang kết nối và gửi thông báo trực tiếp tới Email Admin để kiểm tra và phê duyệt...</p>
         
         <div class="progress-bar-container mt-4">
           <div class="progress-bar-fill"></div>
@@ -86,7 +98,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
@@ -105,27 +117,62 @@ const packages = [
 const selectedPackage = ref(null)
 const submitting = ref(false)
 const scanning = ref(false) // Simulated Bank Scan Overlay
+const transactionCode = ref('')
+const countdown = ref(1800) // 30 phút (1800s)
+let timerInterval = null
 
-const transactionCode = computed(() => {
-  return `CAULONG ${authStore.user?.username?.toUpperCase() || ''}`
+const formattedTime = computed(() => {
+  const mins = Math.floor(countdown.value / 60)
+  const secs = countdown.value % 60
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 })
 
 const qrCodeUrl = computed(() => {
   if (!selectedPackage.value) return ''
-  const bank = 'ICB'
-  const account = '102880579767'
+  const bank = 'MB'
+  const account = '7911235813'
   const amount = selectedPackage.value.price
   const info = encodeURIComponent(transactionCode.value)
-  const accountName = encodeURIComponent('DINH TUAN KHOI')
+  const accountName = encodeURIComponent('HO KINH DOANH LUYEN NOI')
   return `https://img.vietqr.io/image/${bank}-${account}-print.png?amount=${amount}&addInfo=${info}&accountName=${accountName}`
 })
 
 const selectPackage = (pkg) => {
   selectedPackage.value = pkg
+  
+  // Tạo mã giao dịch chuyên nghiệp (LN + yymmddhhMM + 4 kí tự ngẫu nhiên)
+  const randStr = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const dateObj = new Date();
+  const timeStr = `${dateObj.getFullYear().toString().slice(2)}${(dateObj.getMonth() + 1).toString().padStart(2, '0')}${dateObj.getDate().toString().padStart(2, '0')}${dateObj.getHours().toString().padStart(2, '0')}${dateObj.getMinutes().toString().padStart(2, '0')}`;
+  transactionCode.value = `LN${timeStr}${randStr}`;
+
+  // Bắt đầu đếm ngược 30 phút
+  countdown.value = 1800;
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (countdown.value > 0) {
+      countdown.value--;
+    } else {
+      clearInterval(timerInterval);
+    }
+  }, 1000);
+}
+
+const cancelPayment = () => {
+  selectedPackage.value = null
+  if (timerInterval) {
+    clearInterval(timerInterval)
+    timerInterval = null
+  }
 }
 
 const formatCurrency = (val) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)
+}
+
+const copyToClipboard = (text) => {
+  navigator.clipboard.writeText(text)
+  toast.success('📋 Đã sao chép nội dung chuyển khoản!')
 }
 
 const confirmPayment = async () => {
@@ -133,24 +180,28 @@ const confirmPayment = async () => {
   scanning.value = true
   
   try {
-    // 1. Tạo giao dịch Pending lưu vào DB
+    // 1. Tạo giao dịch Pending lưu vào DB và kích hoạt gửi Email ở Backend
     await api.post('/Transactions', {
       amount: selectedPackage.value.price,
       creditsAdded: selectedPackage.value.credits
     })
     
-    // 2. Chờ 2 giây giả lập gửi yêu cầu thanh toán
+    // 2. Chờ giả lập 2.4 giây để hiện thanh loading chuyên nghiệp
     setTimeout(() => {
       scanning.value = false
-      toast.success('🎉 Yêu cầu nạp tiền đã được gửi thành công! Vui lòng chuyển khoản đúng số tiền và nội dung. Admin sẽ duyệt lượt cho bạn ngay khi nhận được tiền.')
+      toast.success('🎉 Yêu cầu nạp tiền đã được gửi! Hệ thống vừa gửi Email thông báo tự động cho Admin. Admin sẽ kiểm tra tài khoản và phê duyệt số lượt cho bạn ngay lập tức!')
       router.push('/')
-    }, 2000)
+    }, 2400)
   } catch (err) {
-    toast.error('Có lỗi xảy ra khi khởi tạo yêu cầu nạp tiền.')
+    toast.error('Có lỗi xảy ra khi gửi yêu cầu nạp tiền.')
     console.error(err)
     scanning.value = false
   }
 }
+
+onUnmounted(() => {
+  if (timerInterval) clearInterval(timerInterval)
+})
 </script>
 
 <style scoped>
@@ -260,86 +311,142 @@ const confirmPayment = async () => {
 
 /* PAYMENT SECTION */
 .payment-section {
-  max-width: 550px;
+  max-width: 500px;
   margin: 0 auto;
-  padding: 30px;
-  background: rgba(15, 23, 42, 0.6);
+  padding: 30px 24px;
+  background: rgba(15, 23, 42, 0.7);
   border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .back-package-btn {
   background: rgba(255, 255, 255, 0.02);
 }
 
-.payment-details h3 {
-  font-size: 22px;
-  font-weight: 800;
-  margin-bottom: 20px;
+.warning-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
 }
 
-.payment-meta-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  text-align: left;
-  margin-bottom: 24px;
+.warning-text strong {
+  color: var(--primary-color);
 }
 
-.meta-item {
+.timer-countdown {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #ef4444;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
 }
 
-.meta-item span {
-  margin-bottom: 4px;
-  font-weight: 600;
-}
-
-.meta-item strong {
-  font-size: 16px;
-}
-
-.price-display {
-  text-shadow: 0 0 8px rgba(163, 230, 53, 0.3);
+.qr-wrapper {
+  background: white;
+  padding: 16px;
+  border-radius: 16px;
+  display: inline-block;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .qr-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 280px;
-  background: white; /* Keep white for easy camera QR scanning */
-  border-radius: var(--border-radius);
-  padding: 20px;
-  border: 2px dashed rgba(163, 230, 53, 0.3);
+  width: 250px;
+  height: 250px;
+  margin: 0 auto;
 }
 
 .qr-image {
   max-width: 100%;
-  max-height: 260px;
-  height: auto;
-  border-radius: 8px;
+  max-height: 100%;
+  object-fit: contain;
 }
 
-.alert-info-box {
-  background: rgba(163, 230, 53, 0.05);
-  border-left: 4px solid var(--primary-color);
-  padding: 14px 18px;
-  border-radius: 4px 12px 12px 4px;
-  text-align: left;
-  font-size: 13px;
+/* Banking info box */
+.banking-info-box {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
 }
 
-.alert-info-box p {
+.bank-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.account-name {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.amount-val {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.amount-val strong {
+  color: var(--primary-color);
+}
+
+.transfer-code {
+  font-size: 14px;
   color: var(--text-secondary);
 }
 
-.alert-info-box strong {
-  color: var(--text-primary);
+.transfer-code strong {
+  font-size: 16px;
+  color: var(--primary-color);
+  font-family: monospace;
+  background: rgba(163, 230, 53, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(163, 230, 53, 0.2);
+}
+
+.btn-copy {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 6px;
+  padding: 0;
+  transition: transform 0.2s;
+}
+
+.btn-copy:hover {
+  transform: scale(1.2);
+}
+
+.owner-email {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
+.help-link .btn-help {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.help-link .btn-help:hover {
+  color: var(--primary-color);
 }
 
 .confirm-payment-btn {

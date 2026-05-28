@@ -38,6 +38,7 @@ builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // --- JWT Authentication ---
 builder.Services.AddAuthentication(options =>
