@@ -16,4 +16,7 @@ public interface IMatchService
 
     Task JoinMatchAsync(int matchId, int userId);
     Task LeaveMatchAsync(int matchId, int userId);
+    Task<IEnumerable<PendingJoinDto>> GetPendingJoinsAsync();
+    Task ApproveJoinAsync(int matchId, int userId);
+    Task RejectJoinAsync(int matchId, int userId);
 }

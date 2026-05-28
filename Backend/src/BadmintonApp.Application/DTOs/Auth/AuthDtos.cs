@@ -20,6 +20,7 @@ public class RegisterDto
     public string FullName { get; set; } = string.Empty;
     [Required]
     public string Phone { get; set; } = string.Empty;
+    public string SkillLevel { get; set; } = "Trung bình";
 }
 
 public class UpdateProfileDto
@@ -28,6 +29,7 @@ public class UpdateProfileDto
     public string FullName { get; set; } = string.Empty;
     [Required]
     public string Phone { get; set; } = string.Empty;
+    public string SkillLevel { get; set; } = "Trung bình";
 }
 
 public class GoogleLoginDto
@@ -44,4 +46,5 @@ public class AuthResponseDto
     public string Phone { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public int Credits { get; set; }
+    public string SkillLevel { get; set; } = string.Empty;
 }

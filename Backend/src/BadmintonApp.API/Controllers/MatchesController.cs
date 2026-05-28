@@ -168,4 +168,46 @@ public class MatchesController : ControllerBase
             return NotFound();
         }
     }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("pending-joins")]
+    public async Task<IActionResult> GetPendingJoins()
+    {
+        var pending = await _matchService.GetPendingJoinsAsync();
+        return Ok(pending);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost("{matchId}/approve-join/{userId}")]
+    public async Task<IActionResult> ApproveJoin(int matchId, int userId)
+    {
+        try
+        {
+            await _matchService.ApproveJoinAsync(matchId, userId);
+            return Ok(new { message = "Duyệt tham gia kèo thành công" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{matchId}/reject-join/{userId}")]
+    public async Task<IActionResult> RejectJoin(int matchId, int userId)
+    {
+        try
+        {
+            await _matchService.RejectJoinAsync(matchId, userId);
+            return Ok(new { message = "Từ chối tham gia kèo thành công" });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
 }

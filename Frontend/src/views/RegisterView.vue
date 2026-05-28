@@ -29,6 +29,16 @@
           <input type="tel" v-model="form.phone" required placeholder="Số ĐT của bạn" />
         </div>
         
+        <div class="form-group">
+          <label>Trình độ chơi</label>
+          <select v-model="form.skillLevel" required class="form-select">
+            <option value="Mới chơi">Mới chơi</option>
+            <option value="Trung bình">Trung bình</option>
+            <option value="Khá">Khá</option>
+            <option value="Tốt">Tốt</option>
+          </select>
+        </div>
+        
         <div v-if="authStore.error" class="error-msg">
           {{ authStore.error }}
         </div>
@@ -60,7 +70,8 @@ const form = reactive({
   password: '',
   confirmPassword: '',
   fullName: '',
-  phone: ''
+  phone: '',
+  skillLevel: 'Trung bình'
 })
 
 const handleSubmit = async () => {
@@ -112,5 +123,19 @@ const handleSubmit = async () => {
 }
 .auth-links {
   font-size: 14px;
+}
+.form-select {
+  width: 100%;
+  padding: 10px 12px;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-select:focus {
+  border-color: #a3e635;
 }
 </style>

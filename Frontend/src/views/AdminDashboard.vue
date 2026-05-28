@@ -37,6 +37,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
             Duyệt Nạp Tiền
           </button>
+          <button :class="{ active: currentTab === 'joinRequests' }" @click="currentTab = 'joinRequests'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            Duyệt Tham Gia Kèo
+          </button>
         </nav>
       </aside>
 
@@ -407,6 +411,58 @@
               </table>
             </div>
           </div>
+
+          <!-- TAB: DUYỆT THAM GIA KÈO -->
+          <div v-else-if="currentTab === 'joinRequests'" class="tab-content animate-fade card">
+            <h2 class="section-title">Duyệt Yêu Cầu Ký Quỹ Tham Gia Kèo (Chống Bùng)</h2>
+            <p class="text-secondary mb-4" style="font-size: 14px;">
+              Danh sách các tài khoản chuyển khoản cọc cho Admin để tham gia kèo giao lưu. Vui lòng xác thực số tiền chuyển khoản thực tế khớp với số tiền yêu cầu rồi click Duyệt.
+            </p>
+            
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Thông Tin Kèo</th>
+                    <th>Người Tham Gia</th>
+                    <th>Thông Tin Liên Hệ</th>
+                    <th>Số Tiền Cọc</th>
+                    <th>Ngày Yêu Cầu</th>
+                    <th style="width: 200px; text-align: center">Hành Động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="pendingJoins.length === 0">
+                    <td colspan="6" class="text-center p-4 text-secondary">Không có yêu cầu tham gia nào đang chờ duyệt. 🎉</td>
+                  </tr>
+                  <tr v-for="req in pendingJoins" :key="req.matchId + '-' + req.userId">
+                    <td>
+                      <strong class="text-white">Kèo #{{ req.matchId }}</strong><br />
+                      <span class="text-secondary" style="font-size: 12px;">{{ req.courtName }}</span><br />
+                      <span class="badge" style="background: rgba(255,255,255,0.05); color: #ccc; font-size: 10px; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px;">{{ formatDate(req.date) }} | {{ formatTime(req.timeStart) }}</span>
+                    </td>
+                    <td>
+                      <strong class="text-white">{{ req.fullName }}</strong><br />
+                      <span class="text-secondary" style="font-size: 12px;">@{{ req.username }}</span><br />
+                      <span class="badge" style="background: rgba(163, 230, 53, 0.15); color: #a3e635; font-size: 11px; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px;">{{ req.skillLevel || 'Trung bình' }}</span>
+                    </td>
+                    <td>
+                      <span class="text-white font-bold">{{ req.phone }}</span><br />
+                      <a :href="'https://zalo.me/' + req.phone" target="_blank" style="color: #0068ff; font-size: 12px; text-decoration: underline;">Nhắn Zalo</a>
+                    </td>
+                    <td class="text-primary fw-bold">{{ formatCurrency(req.cost) }}</td>
+                    <td style="font-size: 13px;">{{ new Date(req.joinedAt).toLocaleString('vi-VN') }}</td>
+                    <td class="text-center">
+                      <div style="display: flex; gap: 8px; justify-content: center;">
+                        <button @click="handleApproveJoin(req.matchId, req.userId)" class="btn btn-sm btn-success-neon" style="font-size: 12px; padding: 6px 12px;">Duyệt</button>
+                        <button @click="handleRejectJoin(req.matchId, req.userId)" class="btn btn-sm btn-danger" style="font-size: 12px; padding: 6px 12px;">Từ chối</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </main>
     </div>
@@ -598,6 +654,41 @@ const fetchTransactions = async () => {
   }
 }
 
+const pendingJoins = ref([])
+const fetchPendingJoins = async () => {
+  loading.value = true
+  try {
+    const res = await api.get('/matches/pending-joins')
+    pendingJoins.value = res.data
+  } catch (err) {
+    error.value = 'Lỗi tải yêu cầu tham gia kèo'
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleApproveJoin = async (matchId, userId) => {
+  try {
+    await api.post(`/matches/${matchId}/approve-join/${userId}`)
+    toast.success('Duyệt người tham gia kèo thành công! Lượt đã được xác nhận.')
+    fetchPendingJoins()
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Duyệt tham gia thất bại')
+  }
+}
+
+const handleRejectJoin = async (matchId, userId) => {
+  if (confirm('Bạn có chắc muốn từ chối và xóa yêu cầu tham gia này?')) {
+    try {
+      await api.delete(`/matches/${matchId}/reject-join/${userId}`)
+      toast.info('Đã từ chối yêu cầu tham gia.')
+      fetchPendingJoins()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Từ chối thất bại')
+    }
+  }
+}
+
 onMounted(() => {
   fetchStats()
   fetchCourts()
@@ -611,6 +702,7 @@ watch(currentTab, (newTab) => {
   if (newTab === 'reports' && reports.value.length === 0) fetchReports()
   if (newTab === 'feedback' && feedbacks.value.length === 0) fetchFeedbacks()
   if (newTab === 'transactions' && transactions.value.length === 0) fetchTransactions()
+  if (newTab === 'joinRequests') fetchPendingJoins()
   if (newTab === 'dashboard' && !stats.value) fetchStats()
 })
 
@@ -699,6 +791,18 @@ const handleUpdateTransaction = async (id, status) => {
 }
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+const formatTime = (timeStr) => {
+  if (!timeStr) return ''
+  const parts = timeStr.split(':')
+  return `${parts[0]}:${parts[1]}`
+}
 
 const areaName = (areaVal) => {
   const map = { 1: 'Tân Mai', 2: 'Trảng Dài', 3: 'Long Bình', 4: 'Tân Hiệp', 5: 'Hố Nai' }

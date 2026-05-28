@@ -10,6 +10,7 @@ public class User
     public string Role { get; set; } = "User"; // Admin, User
     public bool IsLocked { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string SkillLevel { get; set; } = "Trung bình"; // Mới chơi, Trung bình, Khá, Tốt
     
     public int Credits { get; set; } = 10;
 

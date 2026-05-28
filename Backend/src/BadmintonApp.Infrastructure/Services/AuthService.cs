@@ -59,6 +59,7 @@ public class AuthService : IAuthService
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
             FullName = registerDto.FullName,
             Phone = registerDto.Phone,
+            SkillLevel = registerDto.SkillLevel ?? "Trung bình",
             Role = "User"
         };
 
@@ -94,6 +95,7 @@ public class AuthService : IAuthService
 
         user.FullName = dto.FullName;
         user.Phone = dto.Phone;
+        user.SkillLevel = dto.SkillLevel ?? "Trung bình";
 
         await _context.SaveChangesAsync();
 
@@ -142,7 +144,8 @@ public class AuthService : IAuthService
             FullName = user.FullName,
             Phone = user.Phone,
             Role = user.Role,
-            Credits = user.Credits
+            Credits = user.Credits,
+            SkillLevel = user.SkillLevel
         };
     }
 

@@ -59,9 +59,18 @@
               <label>Họ và Tên</label>
               <input type="text" v-model="profileForm.fullName" required class="form-control" />
             </div>
-            <div class="form-group mb-4">
+            <div class="form-group mb-3">
               <label>Số điện thoại / Zalo</label>
               <input type="text" v-model="profileForm.phone" class="form-control" placeholder="Nhập số điện thoại liên lạc" />
+            </div>
+            <div class="form-group mb-4">
+              <label>Trình độ chơi</label>
+              <select v-model="profileForm.skillLevel" class="form-select">
+                <option value="Mới chơi">Mới chơi</option>
+                <option value="Trung bình">Trung bình</option>
+                <option value="Khá">Khá</option>
+                <option value="Tốt">Tốt</option>
+              </select>
             </div>
             <button type="submit" class="btn btn-primary" :disabled="loading.profile">
               {{ loading.profile ? 'Đang lưu...' : 'Lưu Thay Đổi' }}
@@ -163,7 +172,8 @@ const loading = ref({
 
 const profileForm = ref({
   fullName: authStore.user?.fullName || '',
-  phone: authStore.user?.phone || ''
+  phone: authStore.user?.phone || '',
+  skillLevel: authStore.user?.skillLevel || 'Trung bình'
 })
 
 const passwordForm = ref({
@@ -189,7 +199,8 @@ const handleUpdateProfile = async () => {
   try {
     const res = await api.put('/auth/profile', {
       fullName: profileForm.value.fullName,
-      phone: profileForm.value.phone
+      phone: profileForm.value.phone,
+      skillLevel: profileForm.value.skillLevel
     })
     // Cập nhật lại token và user store
     authStore.setAuth(res.data.token, {
@@ -197,7 +208,8 @@ const handleUpdateProfile = async () => {
       username: res.data.username,
       fullName: res.data.fullName,
       phone: res.data.phone,
-      role: res.data.role
+      role: res.data.role,
+      skillLevel: res.data.skillLevel
     })
     toast.success('Cập nhật hồ sơ thành công')
   } catch (err) {

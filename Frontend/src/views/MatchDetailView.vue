@@ -81,24 +81,33 @@
                 </div>
               </div>
             </div>
-
+            
             <!-- Other Participants -->
-            <div v-for="p in match.participants" :key="p.userId" class="participant-item" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-              <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0; color: #475569; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">
+            <div v-for="p in match.participants" :key="p.userId" class="participant-item" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: #1a1a1a;">
+              <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; background: #262626; color: #a3e635; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; border: 1px solid rgba(163, 230, 53, 0.2);">
                 {{ getInitials(p.fullName) }}
               </div>
-              <div class="info">
-                <div class="name font-bold">{{ p.fullName }}</div>
-                <div class="username text-secondary" style="font-size: 12px;">@{{ p.username }}</div>
+              <div class="info" style="flex: 1;">
+                <div class="name font-bold" style="display: flex; align-items: center; gap: 8px; color: #ffffff;">
+                  {{ p.fullName }}
+                  <span v-if="!p.isApproved" class="badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.25);">Chờ duyệt cọc</span>
+                  <span v-else class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.25);">Đã đóng cọc</span>
+                </div>
+                <div class="username text-secondary" style="font-size: 12px;">@{{ p.username }} | Trình độ: <span style="color: #a3e635;">{{ p.skillLevel || 'Trung bình' }}</span></div>
+              </div>
+              
+              <!-- Liên hệ Zalo (Chỉ hiển thị cho người chơi đã được duyệt cọc) -->
+              <div class="contact-action" v-if="p.isApproved && p.phone">
+                <a :href="'https://zalo.me/' + p.phone" target="_blank" class="btn btn-sm" style="background: #0068ff; color: white; padding: 4px 10px; font-size: 11px; border-radius: 4px;">Zalo</a>
               </div>
             </div>
             
             <!-- Empty Slots placeholders -->
-            <div v-for="i in emptySlots" :key="'empty-'+i" class="participant-item empty" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; border: 1px dashed #cbd5e1; opacity: 0.6;">
-              <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; border: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
+            <div v-for="i in emptySlots" :key="'empty-'+i" class="participant-item empty" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; border: 1px dashed rgba(255,255,255,0.1); opacity: 0.5;">
+              <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; color: #666666;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               </div>
-              <div class="info text-secondary">
+              <div class="info text-secondary" style="font-size: 13px;">
                 Slot còn trống
               </div>
             </div>
@@ -119,9 +128,10 @@
             </template>
             
             <template v-else-if="authStore.isAuthenticated">
+              <!-- NÚT THAM GIA: Mở modal đóng cọc -->
               <button 
                 v-if="!hasJoined && match.status === 1" 
-                @click="handleJoin" 
+                @click="showJoinModal = true" 
                 class="btn btn-primary w-100"
                 :disabled="isProcessing"
               >
@@ -129,11 +139,19 @@
               </button>
               
               <template v-else-if="hasJoined">
-                <div class="alert success text-center mb-2" style="background: #dcfce7; color: #166534; padding: 10px; border-radius: 6px; font-weight: bold;">
-                  ✓ Bạn đã tham gia kèo này
+                <!-- TRẠNG THÁI: CHỜ DUYỆT CỌC -->
+                <div v-if="!myParticipantInfo?.isApproved" class="alert mb-2" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.25); color: #f59e0b; padding: 12px; border-radius: 8px; font-size: 13px; text-align: center;">
+                  <strong style="display: block; margin-bottom: 4px;">⚠️ Chờ duyệt đóng cọc</strong>
+                  Yêu cầu đang được Admin xác thực số tiền chuyển khoản của bạn.
                 </div>
                 
-                <a :href="'https://zalo.me/' + match.zalo" target="_blank" class="btn btn-primary w-100 mb-2" style="background: #0068ff; border-color: #0068ff;">
+                <!-- TRẠNG THÁI: ĐÃ DUYỆT CỌC -->
+                <div v-else class="alert success text-center mb-2" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.25); color: #10b981; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 13px;">
+                  ✓ Đã duyệt tham gia kèo (Đã cọc)
+                </div>
+                
+                <!-- Nút liên hệ với Host -->
+                <a :href="'https://zalo.me/' + match.zalo" target="_blank" class="btn btn-primary w-100 mb-2" style="background: #0068ff; border-color: #0068ff; display: flex; justify-content: center; align-items: center; gap: 8px;">
                   Nhắn Zalo cho Host
                 </a>
                 
@@ -144,7 +162,7 @@
                   style="border-color: #ef4444; color: #ef4444;"
                   :disabled="isProcessing"
                 >
-                  {{ isProcessing ? 'Đang xử lý...' : 'Hủy Tham Gia' }}
+                  {{ isProcessing ? 'Đang xử lý...' : 'Hủy Tham Gia Kèo' }}
                 </button>
               </template>
               
@@ -193,6 +211,53 @@
         </div>
       </div>
     </div>
+
+    <!-- Join Escrow Modal -->
+    <div v-if="showJoinModal" class="modal-overlay" @click.self="showJoinModal = false">
+      <div class="modal-content card" style="max-width: 500px; width: 100%; padding: 24px;">
+        <h3 style="margin-top: 0; color: #ffffff;">Ký Quỹ Tham Gia Kèo (VietQR)</h3>
+        <p class="text-secondary mb-3" style="font-size: 13px;">
+          Để chống tình trạng <strong>"bùng kèo"</strong> hoặc tài khoản ảo, bạn vui lòng chuyển khoản đặt cọc chi phí tham gia kèo này cho Admin (Admin sẽ làm bên trung gian giữ tiền cọc để bảo đảm sự fairplay).
+        </p>
+
+        <div style="background: rgba(163, 230, 53, 0.05); border: 1px solid rgba(163, 230, 53, 0.2); padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span class="text-secondary">Chi phí tham gia:</span>
+            <strong style="color: #a3e635;">{{ match.cost ? match.cost.toLocaleString('vi-VN') + ' đ' : 'Miễn phí' }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span class="text-secondary">Nội dung chuyển khoản:</span>
+            <strong style="color: #ffffff; font-family: monospace;">TG {{ match.id }} {{ authStore.user?.id }}</strong>
+          </div>
+        </div>
+
+        <!-- VietQR Image -->
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img 
+            :src="`https://img.vietqr.io/image/ICB-102880579767-print.png?amount=${match.cost}&addInfo=TG%20${match.id}%20${authStore.user?.id}&accountName=DINH%20TUAN%20KHOI`" 
+            alt="VietQR Ký Quỹ" 
+            style="max-width: 250px; width: 100%; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: white;"
+          />
+          <p style="font-size: 11px; color: var(--text-secondary); margin-top: 8px; font-style: italic;">
+            * Sử dụng app ngân hàng quét mã QR trên để chuyển khoản tự động chính xác nội dung.
+          </p>
+        </div>
+
+        <!-- Admin Contact Info -->
+        <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-bottom: 20px; font-size: 13px;">
+          <h4 style="margin: 0 0 8px 0; color: #ffffff; font-size: 14px;">Thông tin liên hệ hỗ trợ Admin:</h4>
+          <p style="margin: 0 0 4px 0;" class="text-secondary">📞 Hotline / Zalo: <strong class="text-white">0987.654.321 (Đinh Tuấn Khởi)</strong></p>
+          <p style="margin: 0 0 4px 0;" class="text-secondary">💬 Facebook: <a href="https://fb.com/ghepkeocaulongbienhoa" target="_blank" style="color: #0068ff; text-decoration: underline;">ghépkeocaulongbienhoa</a></p>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button @click="showJoinModal = false" class="btn btn-outline">Hủy</button>
+          <button @click="confirmJoinPayment" class="btn btn-primary" :disabled="isProcessing">
+            {{ isProcessing ? 'Đang gửi yêu cầu...' : 'Tôi Đã Chuyển Khoản' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
   
   <div v-else-if="loading" class="container text-center" style="padding: 100px 0;">
@@ -228,12 +293,19 @@ const showReportModal = ref(false)
 const reportReason = ref('1')
 const isReporting = ref(false)
 
+// Join Escrow Modal state
+const showJoinModal = ref(false)
+
 const isHost = computed(() => {
   return authStore.user && match.value && authStore.user.id === match.value.hostUserId
 })
 
 const hasJoined = computed(() => {
-  return authStore.user && match.value && match.value.participantIds?.includes(authStore.user.id)
+  return authStore.user && match.value && match.value.participants?.some(p => p.userId === authStore.user.id)
+})
+
+const myParticipantInfo = computed(() => {
+  return match.value?.participants?.find(p => p.userId === authStore.user?.id)
 })
 
 const emptySlots = computed(() => {
@@ -263,19 +335,15 @@ onMounted(() => {
   fetchMatch()
 })
 
-const handleJoin = async () => {
-  if (!authStore.isAuthenticated) {
-    router.push({ name: 'login', query: { redirect: route.fullPath } })
-    return
-  }
-  
+const confirmJoinPayment = async () => {
   isProcessing.value = true
   try {
     await api.post(`/matches/${match.value.id}/join`)
-    toast.success('Tham gia kèo thành công!')
-    await fetchMatch() // Reload match to get new participant list
+    toast.success('🎉 Yêu cầu tham gia đã gửi! Vui lòng chờ Admin xác nhận khoản cọc của bạn.')
+    showJoinModal.value = false
+    await fetchMatch() // Reload match to update list
   } catch (err) {
-    toast.error(err.response?.data || 'Lỗi khi tham gia kèo')
+    toast.error(err.response?.data?.message || err.response?.data || 'Lỗi khi gửi yêu cầu tham gia')
   } finally {
     isProcessing.value = false
   }

@@ -60,6 +60,12 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    setAuth(token, user) {
+      this.token = token
+      this.user = user
+      localStorage.setItem('token', token)
+      localStorage.setItem('user', JSON.stringify(user))
+    },
     logout() {
       this.user = null
       this.token = null
@@ -76,7 +82,8 @@ export const useAuthStore = defineStore('auth', {
           username: data.username,
           fullName: data.fullName,
           phone: data.phone,
-          role: data.role
+          role: data.role,
+          skillLevel: data.skillLevel
         }
         this.credits = data.credits || 0
         localStorage.setItem('token', data.token)

@@ -134,7 +134,7 @@ const confirmPayment = async () => {
   
   try {
     // 1. Tạo giao dịch Pending lưu vào DB
-    await api.post('/api/Transactions', {
+    await api.post('/Transactions', {
       amount: selectedPackage.value.price,
       creditsAdded: selectedPackage.value.credits
     })

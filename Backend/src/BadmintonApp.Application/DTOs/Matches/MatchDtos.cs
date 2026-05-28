@@ -36,6 +36,24 @@ public class ParticipantDto
     public int UserId { get; set; }
     public string FullName { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public string SkillLevel { get; set; } = string.Empty;
+    public bool IsApproved { get; set; }
+}
+
+public class PendingJoinDto
+{
+    public int MatchId { get; set; }
+    public int UserId { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public string SkillLevel { get; set; } = string.Empty;
+    public string CourtName { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
+    public TimeSpan TimeStart { get; set; }
+    public decimal Cost { get; set; }
+    public DateTime JoinedAt { get; set; }
 }
 
 public class CreateMatchDto

@@ -9,4 +9,5 @@ public class MatchParticipant
     public User User { get; set; } = null!;
 
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+    public bool IsApproved { get; set; } = false;
 }

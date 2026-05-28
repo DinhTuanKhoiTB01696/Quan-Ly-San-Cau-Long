@@ -219,31 +219,26 @@ public class MatchService : IMatchService
             ?? throw new KeyNotFoundException("Match not found");
 
         if (match.Status != MatchStatus.Open)
-            throw new InvalidOperationException("This match is not open for joining.");
+            throw new InvalidOperationException("Kèo này đã đóng hoặc đầy, không thể tham gia.");
 
         if (match.HostUserId == userId)
-            throw new InvalidOperationException("Host cannot join their own match as a participant.");
+            throw new InvalidOperationException("Chủ kèo không cần tham gia kèo của chính mình.");
 
         if (match.Participants.Any(p => p.UserId == userId))
-            throw new InvalidOperationException("You have already joined this match.");
+            throw new InvalidOperationException("Bạn đã gửi yêu cầu tham gia kèo này rồi.");
 
         if (match.SlotsFilled >= match.SlotsTotal)
-            throw new InvalidOperationException("This match is already full.");
+            throw new InvalidOperationException("Kèo này hiện tại đã đầy chỗ.");
 
         match.Participants.Add(new MatchParticipant
         {
             MatchId = matchId,
             UserId = userId,
-            JoinedAt = DateTime.UtcNow
+            JoinedAt = DateTime.UtcNow,
+            IsApproved = false // Mặc định là chờ duyệt (chờ đóng tiền cọc)
         });
 
-        match.SlotsFilled++;
-
-        if (match.SlotsFilled >= match.SlotsTotal)
-        {
-            match.Status = MatchStatus.Full;
-        }
-
+        // Không tăng match.SlotsFilled ở đây. SlotsFilled chỉ tăng khi Admin duyệt đóng cọc!
         await _context.SaveChangesAsync();
     }
 
@@ -255,16 +250,78 @@ public class MatchService : IMatchService
             ?? throw new KeyNotFoundException("Match not found");
 
         var participant = match.Participants.FirstOrDefault(p => p.UserId == userId)
-            ?? throw new InvalidOperationException("You are not a participant of this match.");
+            ?? throw new InvalidOperationException("Bạn chưa tham gia kèo này.");
 
-        match.Participants.Remove(participant);
-        match.SlotsFilled--;
-
-        if (match.Status == MatchStatus.Full && match.SlotsFilled < match.SlotsTotal)
+        if (participant.IsApproved)
         {
-            match.Status = MatchStatus.Open;
+            match.SlotsFilled--;
+            if (match.Status == MatchStatus.Full && match.SlotsFilled < match.SlotsTotal)
+            {
+                match.Status = MatchStatus.Open;
+            }
         }
 
+        match.Participants.Remove(participant);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<PendingJoinDto>> GetPendingJoinsAsync()
+    {
+        var pendingParticipants = await _context.MatchParticipants
+            .Include(mp => mp.User)
+            .Include(mp => mp.Match)
+                .ThenInclude(m => m.Court)
+            .Where(mp => !mp.IsApproved)
+            .OrderByDescending(mp => mp.JoinedAt)
+            .ToListAsync();
+
+        return pendingParticipants.Select(mp => new PendingJoinDto
+        {
+            MatchId = mp.MatchId,
+            UserId = mp.UserId,
+            Username = mp.User.Username,
+            FullName = mp.User.FullName,
+            Phone = mp.User.Phone,
+            SkillLevel = mp.User.SkillLevel,
+            CourtName = mp.Match.Court?.Name ?? "Unknown",
+            Date = mp.Match.Date,
+            TimeStart = mp.Match.TimeStart,
+            Cost = mp.Match.Cost,
+            JoinedAt = mp.JoinedAt
+        });
+    }
+
+    public async Task ApproveJoinAsync(int matchId, int userId)
+    {
+        var mp = await _context.MatchParticipants
+            .Include(x => x.Match)
+            .FirstOrDefaultAsync(x => x.MatchId == matchId && x.UserId == userId)
+            ?? throw new KeyNotFoundException("Yêu cầu tham gia không tồn tại.");
+
+        if (mp.IsApproved) return;
+
+        var match = mp.Match;
+        if (match.SlotsFilled >= match.SlotsTotal)
+            throw new InvalidOperationException("Kèo này đã đầy chỗ, không thể duyệt thêm.");
+
+        mp.IsApproved = true;
+        match.SlotsFilled++;
+
+        if (match.SlotsFilled >= match.SlotsTotal)
+        {
+            match.Status = MatchStatus.Full;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task RejectJoinAsync(int matchId, int userId)
+    {
+        var mp = await _context.MatchParticipants
+            .FirstOrDefaultAsync(x => x.MatchId == matchId && x.UserId == userId)
+            ?? throw new KeyNotFoundException("Yêu cầu tham gia không tồn tại.");
+
+        _context.MatchParticipants.Remove(mp);
         await _context.SaveChangesAsync();
     }
 
@@ -300,7 +357,10 @@ public class MatchService : IMatchService
             {
                 UserId = p.UserId,
                 FullName = p.User.FullName,
-                Username = p.User.Username
+                Username = p.User.Username,
+                Phone = p.User.Phone,
+                SkillLevel = p.User.SkillLevel,
+                IsApproved = p.IsApproved
             }).ToList() ?? new List<ParticipantDto>()
         };
     }
