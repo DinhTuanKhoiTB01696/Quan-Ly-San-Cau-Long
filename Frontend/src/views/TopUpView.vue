@@ -46,8 +46,9 @@
 
         <!-- Banking Details Box -->
         <div class="banking-info-box mb-4">
-          <p class="bank-name">MB BANK — 7911235813</p>
-          <p class="account-name">HO KINH DOANH LUYEN NOI</p>
+          <p class="bank-name">VietinBank — 102880579767</p>
+          <p class="account-name">DINH TUAN KHOI</p>
+          <p class="bank-branch">Chi nhánh: CN DONG NAI - HOI SO</p>
           <p class="amount-val">Số tiền: <strong>{{ formatCurrency(selectedPackage.price) }}</strong></p>
           <p class="transfer-code">
             Nội dung CK: <strong>{{ transactionCode }}</strong>
@@ -129,11 +130,11 @@ const formattedTime = computed(() => {
 
 const qrCodeUrl = computed(() => {
   if (!selectedPackage.value) return ''
-  const bank = 'MB'
-  const account = '7911235813'
+  const bank = 'ICB' // VietinBank
+  const account = '102880579767'
   const amount = selectedPackage.value.price
   const info = encodeURIComponent(transactionCode.value)
-  const accountName = encodeURIComponent('HO KINH DOANH LUYEN NOI')
+  const accountName = encodeURIComponent('DINH TUAN KHOI')
   return `https://img.vietqr.io/image/${bank}-${account}-print.png?amount=${amount}&addInfo=${info}&accountName=${accountName}`
 })
 
@@ -387,8 +388,14 @@ onUnmounted(() => {
 .account-name {
   font-size: 14px;
   color: var(--text-secondary);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   letter-spacing: 0.5px;
+}
+
+.bank-branch {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 8px;
 }
 
 .amount-val {
