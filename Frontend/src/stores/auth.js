@@ -75,7 +75,7 @@ export const useAuthStore = defineStore('auth', {
     async fetchMe() {
       if (!this.token) return
       try {
-        const { data } = await api.get('/api/Auth/me')
+        const { data } = await api.get('/Auth/me')
         this.token = data.token
         this.user = {
           id: data.userId,
@@ -94,7 +94,7 @@ export const useAuthStore = defineStore('auth', {
     },
     async googleLogin(token) {
       try {
-        const res = await api.post('/auth/google-login', { token })
+        const res = await api.post('/Auth/google-login', { token })
         this.token = res.data.token
         this.user = res.data.user
         this.credits = res.data.user.credits || 0

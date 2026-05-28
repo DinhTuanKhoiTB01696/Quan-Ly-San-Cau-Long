@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BadmintonApp.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260528063946_InitialCreate")]
+    [Migration("20260528080051_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -183,6 +183,9 @@ namespace BadmintonApp.Infrastructure.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("datetime2");
 
@@ -285,6 +288,10 @@ namespace BadmintonApp.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SkillLevel")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
